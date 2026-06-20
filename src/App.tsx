@@ -3,6 +3,7 @@ import { AuthGuard, PublicGuard } from './shared/guards/AuthGuard';
 import { DashboardLayout } from './shared/layouts/DashboardLayout';
 import { LoginPage } from './features/auth/presentation/LoginPage';
 import { RegisterPage } from './features/auth/presentation/RegisterPage';
+import { DashboardPage } from './features/dashboard/presentation/DashboardPage';
 
 const App = () => {
   return (
@@ -15,7 +16,7 @@ const App = () => {
 
         <Route element={<AuthGuard />}>
           <Route element={<DashboardLayout />}>
-            <Route path="/dashboard" element={<div>Dashboard</div>} />
+            <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/patients" element={<div>Patients</div>} />
             <Route path="/prescriptions" element={<div>Prescriptions</div>} />
             <Route path="/clinical-records" element={<div>Clinical Records</div>} />
