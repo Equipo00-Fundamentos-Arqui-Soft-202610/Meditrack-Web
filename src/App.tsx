@@ -1,14 +1,16 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthGuard, PublicGuard } from './shared/guards/AuthGuard';
 import { DashboardLayout } from './shared/layouts/DashboardLayout';
+import { LoginPage } from './features/auth/presentation/LoginPage';
+import { RegisterPage } from './features/auth/presentation/RegisterPage';
 
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
         <Route element={<PublicGuard />}>
-          <Route path="/login" element={<div>Login Page</div>} />
-          <Route path="/register" element={<div>Register Page</div>} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
         </Route>
 
         <Route element={<AuthGuard />}>

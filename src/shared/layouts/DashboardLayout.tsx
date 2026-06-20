@@ -10,6 +10,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 const DRAWER_WIDTH = 260;
 
@@ -25,13 +26,14 @@ const NAV_ITEMS = [
 export const DashboardLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const drawer = (
     <Box>
       <Toolbar sx={{ gap: 1, px: 2 }}>
         <Avatar src="/meditrack-logo.png" alt="MediTrack" sx={{ width: 36, height: 36 }} />
-        <Typography variant="h6" color="primary" fontWeight={700}>MediTrack</Typography>
+        <Typography variant="h6" color="primary" sx={{ fontWeight: 700 }}>MediTrack</Typography>
       </Toolbar>
       <List>
         {NAV_ITEMS.map((item) => (
@@ -48,9 +50,9 @@ export const DashboardLayout = () => {
           </ListItem>
         ))}
       </List>
-      <Box position="absolute" bottom={16} width="100%" px={2}>
+      <Box sx={{ position: 'absolute', bottom: 16, width: '100%', px: 2 }}>
         <Tooltip title="Cerrar sesión">
-          <IconButton onClick={() => { localStorage.clear(); navigate('/login'); }}>
+          <IconButton onClick={() => { logout(); navigate('/login'); }}>
             <LogoutIcon />
           </IconButton>
         </Tooltip>
@@ -68,7 +70,9 @@ export const DashboardLayout = () => {
           <Typography variant="subtitle1" color="text.secondary" sx={{ flexGrow: 1 }}>
             Portal Personal Técnico
           </Typography>
-          <Avatar sx={{ bgcolor: 'primary.main', width: 34, height: 34 }}>PT</Avatar>
+          <Avatar sx={{ bgcolor: 'primary.main', width: 34, height: 34 }}>
+            {user?.nombre?.charAt(0).toUpperCase() ?? 'U'}
+          </Avatar>
         </Toolbar>
       </AppBar>
 
