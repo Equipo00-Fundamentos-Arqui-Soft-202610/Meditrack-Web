@@ -50,4 +50,8 @@ export const ENDPOINTS = {
   },
   ADHERENCE_HISTORY: '/medications/adherence-history',
   STOCK_LOW: '/stock/low',
+  PROFILE: {
+    BASE: '/profile',
+    UPDATE: '/profile',
+  },
 } as const;
