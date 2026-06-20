@@ -8,6 +8,8 @@ import { PatientListPage } from './features/patients/presentation/PatientListPag
 import { PatientDetailPage } from './features/patients/presentation/PatientDetailPage';
 import { PrescriptionListPage } from './features/prescriptions/presentation/PrescriptionListPage';
 import { PrescriptionCreatePage } from './features/prescriptions/presentation/PrescriptionCreatePage';
+import { ClinicalRecordListPage } from './features/clinical-records/presentation/ClinicalRecordListPage';
+import { ClinicalRecordImportPage } from './features/clinical-records/presentation/ClinicalRecordImportPage';
 
 const App = () => {
   return (
@@ -25,7 +27,8 @@ const App = () => {
             <Route path="/patients/:id" element={<PatientDetailPage />} />
             <Route path="/prescriptions" element={<PrescriptionListPage />} />
             <Route path="/prescriptions/new" element={<PrescriptionCreatePage />} />
-            <Route path="/clinical-records" element={<div>Clinical Records</div>} />
+            <Route path="/clinical-records" element={<ClinicalRecordListPage />} />
+            <Route path="/clinical-records/import" element={<ClinicalRecordImportPage />} />
             <Route path="/alerts" element={<div>Alerts</div>} />
             <Route path="/profile" element={<div>Profile</div>} />
           </Route>
