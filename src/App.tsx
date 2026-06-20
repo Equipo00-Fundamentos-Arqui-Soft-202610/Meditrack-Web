@@ -4,6 +4,8 @@ import { DashboardLayout } from './shared/layouts/DashboardLayout';
 import { LoginPage } from './features/auth/presentation/LoginPage';
 import { RegisterPage } from './features/auth/presentation/RegisterPage';
 import { DashboardPage } from './features/dashboard/presentation/DashboardPage';
+import { PatientListPage } from './features/patients/presentation/PatientListPage';
+import { PatientDetailPage } from './features/patients/presentation/PatientDetailPage';
 
 const App = () => {
   return (
@@ -17,7 +19,8 @@ const App = () => {
         <Route element={<AuthGuard />}>
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/patients" element={<div>Patients</div>} />
+            <Route path="/patients" element={<PatientListPage />} />
+            <Route path="/patients/:id" element={<PatientDetailPage />} />
             <Route path="/prescriptions" element={<div>Prescriptions</div>} />
             <Route path="/clinical-records" element={<div>Clinical Records</div>} />
             <Route path="/alerts" element={<div>Alerts</div>} />
