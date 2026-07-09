@@ -8,9 +8,8 @@ import { alertService } from '../data/alertService';
 import type { Alert, AlertSeverity } from '../data/alertTypes';
 
 const severityColor: Record<AlertSeverity, 'info' | 'warning' | 'error'> = {
-  low: 'info',
-  medium: 'warning',
-  high: 'error',
+  info: 'info',
+  warning: 'warning',
   critical: 'error',
 };
 
@@ -56,36 +55,28 @@ export const AlertListPage = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>Paciente</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Tipo</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Paciente ID</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Severidad</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Mensaje</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Motivo</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Fecha</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Estado</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {alerts.map((alert) => (
-                <TableRow key={alert.id} sx={{ opacity: alert.isAcknowledged ? 0.5 : 1 }}>
-                  <TableCell>{alert.patientName}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={alert.alertType.replace('_', ' ')}
-                      size="small"
-                      variant="outlined"
-                    />
-                  </TableCell>
+                <TableRow key={alert.id} sx={{ opacity: alert.status === 'acknowledged' ? 0.5 : 1 }}>
+                  <TableCell>{alert.patientId}</TableCell>
                   <TableCell>
                     <Chip
                       label={alert.severity}
-                      color={severityColor[alert.severity as AlertSeverity]}
+                      color={severityColor[alert.severity] ?? 'default'}
                       size="small"
                     />
                   </TableCell>
-                  <TableCell>{alert.message}</TableCell>
-                  <TableCell>{alert.createdAt}</TableCell>
+                  <TableCell>{alert.reason}</TableCell>
+                  <TableCell>{alert.triggeredAt}</TableCell>
                   <TableCell>
-                    {alert.isAcknowledged ? (
+                    {alert.status === 'acknowledged' ? (
                       <Chip label="Revisada" color="success" size="small" />
                     ) : (
                       <Button

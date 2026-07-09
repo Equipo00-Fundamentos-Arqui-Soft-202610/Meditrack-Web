@@ -66,7 +66,7 @@ export const ProfilePage = () => {
                 <Grid size={{ xs: 12 }}>
                   <TextField
                     label="Rol"
-                    value={user.rol === 'personal_tecnico' ? 'Personal Técnico' : 'Paciente'}
+                    value={user.rol === 'TechnicalStaff' || user.rol === 'Doctor' ? 'Personal Técnico' : 'Paciente'}
                     fullWidth
                     slotProps={{ input: { readOnly: true } }}
                   />

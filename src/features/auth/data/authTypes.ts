@@ -1,4 +1,4 @@
-export type UserRole = 'paciente' | 'personal_tecnico';
+export type UserRole = 'paciente' | 'patient' | 'TechnicalStaff' | 'Doctor' | 'Admin';
 
 export interface LoginRequest {
   email: string;

@@ -12,6 +12,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import { dashboardService } from '../data/dashboardService';
+import { useAuth } from '../../../shared/contexts/AuthContext';
 
 const PIE_COLORS = ['#1565C0', '#26A69A', '#FB8C00', '#E53935', '#7B1FA2', '#00897B'];
 
@@ -20,9 +21,12 @@ const from = new Date(today.getTime() - 30 * 86400000).toISOString().split('T')[
 const to = today.toISOString().split('T')[0];
 
 export const DashboardPage = () => {
+  const { userId } = useAuth();
+
   const trendQuery = useQuery({
-    queryKey: ['adherence-trend', 1, from, to],
-    queryFn: () => dashboardService.getAdherenceTrend(1, from, to),
+    queryKey: ['adherence-trend', userId, from, to],
+    queryFn: () => dashboardService.getAdherenceTrend(userId!, from, to),
+    enabled: userId !== null,
   });
 
   const complianceQuery = useQuery({
@@ -36,8 +40,9 @@ export const DashboardPage = () => {
   });
 
   const stockQuery = useQuery({
-    queryKey: ['low-stock', 1],
-    queryFn: () => dashboardService.getLowStockMedications(1),
+    queryKey: ['low-stock', userId],
+    queryFn: () => dashboardService.getLowStockMedications(userId!),
+    enabled: userId !== null,
   });
 
   const loading = trendQuery.isLoading || complianceQuery.isLoading || appointmentQuery.isLoading;

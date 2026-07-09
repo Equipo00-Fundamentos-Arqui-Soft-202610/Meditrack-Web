@@ -9,23 +9,20 @@ import AddIcon from '@mui/icons-material/Add';
 import { clinicalRecordService } from '../data/clinicalRecordService';
 import type { ClinicalRecord } from '../data/clinicalRecordTypes';
 
-const recordTypeColor: Record<string, 'info' | 'success' | 'warning' | 'error' | 'primary'> = {
-  'Análisis': 'info',
-  'Diagnóstico': 'primary',
-  'Receta': 'success',
-  'Informe': 'warning',
+const sourceColor: Record<string, 'info' | 'success' | 'warning' | 'primary'> = {
+  'manual': 'info',
+  'imported': 'success',
+  'system': 'primary',
 };
 
 export const ClinicalRecordListPage = () => {
   const navigate = useNavigate();
-  const [typeFilter, setTypeFilter] = useState('');
   const [patientFilter, setPatientFilter] = useState('');
 
   const query = useQuery({
-    queryKey: ['clinical-records', typeFilter, patientFilter],
+    queryKey: ['clinical-records', patientFilter],
     queryFn: () =>
       clinicalRecordService.getAll({
-        recordType: typeFilter || undefined,
         patientId: patientFilter ? Number(patientFilter) : undefined,
       }),
   });
@@ -42,21 +39,6 @@ export const ClinicalRecordListPage = () => {
       </Box>
 
       <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-        <TextField
-          select
-          label="Tipo de registro"
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          sx={{ minWidth: 200 }}
-          slotProps={{ select: { native: true } }}
-        >
-          <option value="">Todos</option>
-          <option value="Análisis">Análisis</option>
-          <option value="Diagnóstico">Diagnóstico</option>
-          <option value="Receta">Receta</option>
-          <option value="Informe">Informe</option>
-          <option value="Otro">Otro</option>
-        </TextField>
         <TextField
           label="ID de paciente"
           value={patientFilter}
@@ -89,9 +71,9 @@ export const ClinicalRecordListPage = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>Paciente</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Tipo</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Descripción</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Paciente ID</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Fuente</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Diagnóstico</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Fecha</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Notas</TableCell>
               </TableRow>
@@ -99,15 +81,15 @@ export const ClinicalRecordListPage = () => {
             <TableBody>
               {records.map((record) => (
                 <TableRow key={record.id}>
-                  <TableCell>{record.patientName}</TableCell>
+                  <TableCell>{record.patientId}</TableCell>
                   <TableCell>
                     <Chip
-                      label={record.recordType}
-                      color={recordTypeColor[record.recordType] ?? 'info'}
+                      label={record.source}
+                      color={sourceColor[record.source] ?? 'info'}
                       size="small"
                     />
                   </TableCell>
-                  <TableCell>{record.description}</TableCell>
+                  <TableCell>{record.diagnosis}</TableCell>
                   <TableCell>{record.recordDate}</TableCell>
                   <TableCell>{record.notes}</TableCell>
                 </TableRow>

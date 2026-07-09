@@ -1,8 +1,10 @@
 export const API_BASE_URLS = {
-  TREATMENT_SERVICE: import.meta.env.VITE_TREATMENT_API ?? 'http://localhost:5000/api/v1',
-  APPOINTMENT_SERVICE: import.meta.env.VITE_APPOINTMENT_API ?? 'http://localhost:5268/api/v1',
-  FOLLOW_UP_SERVICE: import.meta.env.VITE_FOLLOWUP_API ?? 'http://localhost:5267/api/v1',
-  ANALYSIS_SERVICE: import.meta.env.VITE_ANALYSIS_API ?? 'http://localhost:5001/api/v1',
+  IDENTITY_SERVICE: import.meta.env.VITE_IDENTITY_API ?? 'http://localhost:5000/identity/api/v1',
+  TREATMENT_SERVICE: import.meta.env.VITE_TREATMENT_API ?? 'http://localhost:5000/treatment/api/v1',
+  APPOINTMENT_SERVICE: import.meta.env.VITE_APPOINTMENT_API ?? 'http://localhost:5000/appointments/api/v1',
+  FOLLOW_UP_SERVICE: import.meta.env.VITE_FOLLOWUP_API ?? 'http://localhost:5000/followup/api/v1',
+  ANALYSIS_SERVICE: import.meta.env.VITE_ANALYSIS_API ?? 'http://localhost:5000/analysis/api/v1',
+  REMINDER_SERVICE: import.meta.env.VITE_REMINDER_API ?? 'http://localhost:5000/reminders',
 } as const;
 
 export const ENDPOINTS = {
@@ -46,7 +48,18 @@ export const ENDPOINTS = {
     APPOINTMENTS: '/statistics/appointments',
   },
   APPOINTMENTS: {
+    BASE: '/appointments',
     BY_PATIENT: (patientId: number) => `/appointments?patientId=${patientId}`,
+  },
+  CLINICAL_EXAMS: {
+    PENDING: '/clinical-exams/pending',
+  },
+  COMPLIANCE: {
+    BASE: '/compliance',
+    BY_PATIENT: (patientId: number) => `/compliance?patientId=${patientId}`,
+  },
+  REMINDERS: {
+    BY_PATIENT: (patientId: number) => `/patients/${patientId}`,
   },
   ADHERENCE_HISTORY: '/medications/adherence-history',
   STOCK_LOW: '/stock/low',

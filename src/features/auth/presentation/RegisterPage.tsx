@@ -11,7 +11,7 @@ export const RegisterPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [rol, setRol] = useState<UserRole>('personal_tecnico');
+  const [rol, setRol] = useState<UserRole>('TechnicalStaff');
   const [institucion, setInstitucion] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -27,7 +27,7 @@ export const RegisterPage = () => {
 
     setLoading(true);
     try {
-      await register({ nombre, email, password, rol, institucion: rol === 'personal_tecnico' ? institucion : undefined });
+      await register({ nombre, email, password, rol, institucion: rol === 'TechnicalStaff' ? institucion : undefined });
       navigate('/dashboard');
     } catch {
       setError('Error al registrar. Intenta de nuevo.');
@@ -61,11 +61,11 @@ export const RegisterPage = () => {
 
             <TextField select label="Rol" fullWidth required value={rol}
               onChange={(e) => setRol(e.target.value as UserRole)} sx={{ mb: 2 }}>
-              <MenuItem value="personal_tecnico">Personal Técnico</MenuItem>
+              <MenuItem value="TechnicalStaff">Personal Técnico</MenuItem>
               <MenuItem value="paciente">Paciente</MenuItem>
             </TextField>
 
-            {rol === 'personal_tecnico' && (
+            {rol === 'TechnicalStaff' && (
               <TextField label="Institución / Centro de salud" fullWidth required value={institucion}
                 onChange={(e) => setInstitucion(e.target.value)} sx={{ mb: 2 }} />
             )}
