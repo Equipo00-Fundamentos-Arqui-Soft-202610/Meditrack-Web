@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Box, Grid, Card, CardContent, Typography, TextField, Button,
-  Alert, IconButton, Autocomplete,
+  Alert, IconButton, Autocomplete, Chip,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -23,6 +23,7 @@ interface MedicationEntry {
   endDate: string;
   stockCount: number;
   stockAlertThreshold: number;
+  schedules: string[];
 }
 
 const emptyEntry = (): MedicationEntry => ({
@@ -34,6 +35,7 @@ const emptyEntry = (): MedicationEntry => ({
   endDate: '',
   stockCount: 30,
   stockAlertThreshold: 5,
+  schedules: ['08:00'],
 });
 
 export const PrescriptionCreatePage = () => {
@@ -55,9 +57,9 @@ export const PrescriptionCreatePage = () => {
       setPatient({
         patientId: Number(preselectedPatientId),
         fullName: locationState.patientName,
-        dni: '',
-        age: 0,
-        status: 'Active',
+        email: '',
+        dni: null,
+        age: null,
       });
       setPatientSearch(locationState.patientName);
     }
@@ -101,6 +103,37 @@ export const PrescriptionCreatePage = () => {
     setMedications((prev) =>
       prev.map((med, i) =>
         i === index ? { ...med, [field]: value } : med,
+      ),
+    );
+  };
+
+  const handleAddSchedule = (medIndex: number) => {
+    setMedications((prev) =>
+      prev.map((med, i) =>
+        i === medIndex ? { ...med, schedules: [...med.schedules, '12:00'] } : med,
+      ),
+    );
+  };
+
+  const handleRemoveSchedule = (medIndex: number, schedIndex: number) => {
+    setMedications((prev) =>
+      prev.map((med, i) =>
+        i === medIndex
+          ? { ...med, schedules: med.schedules.filter((_, j) => j !== schedIndex) }
+          : med,
+      ),
+    );
+  };
+
+  const handleScheduleChange = (medIndex: number, schedIndex: number, value: string) => {
+    setMedications((prev) =>
+      prev.map((med, i) =>
+        i === medIndex
+          ? {
+              ...med,
+              schedules: med.schedules.map((s, j) => (j === schedIndex ? value : s)),
+            }
+          : med,
       ),
     );
   };
@@ -149,7 +182,7 @@ export const PrescriptionCreatePage = () => {
         endDate: m.endDate || undefined,
         stockCount: m.stockCount,
         stockAlertThreshold: m.stockAlertThreshold,
-        doseSchedules: [{ scheduledTime: '08:00:00' }],
+        doseSchedules: m.schedules.map((s) => ({ scheduledTime: `${s}:00` })),
       })),
     };
     createMutation.mutate(payload);
@@ -300,6 +333,35 @@ export const PrescriptionCreatePage = () => {
                     fullWidth
                     type="number"
                   />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+                    <Typography variant="subtitle2" color="text.secondary">Horarios de toma</Typography>
+                    <Button size="small" startIcon={<AddIcon />} onClick={() => handleAddSchedule(index)}>
+                      Agregar horario
+                    </Button>
+                  </Box>
+                  <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+                    {med.schedules.map((sched, sIdx) => (
+                      <Box key={sIdx} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <TextField
+                          type="time"
+                          size="small"
+                          value={sched}
+                          onChange={(e) => handleScheduleChange(index, sIdx, e.target.value)}
+                          slotProps={{ inputLabel: { shrink: true } }}
+                          sx={{ width: 130 }}
+                        />
+                        <IconButton
+                          size="small"
+                          onClick={() => handleRemoveSchedule(index, sIdx)}
+                          disabled={med.schedules.length <= 1}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    ))}
+                  </Box>
                 </Grid>
               </Grid>
             </Box>

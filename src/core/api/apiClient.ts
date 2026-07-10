@@ -1,39 +1,41 @@
 import axios from 'axios';
 import { API_BASE_URLS } from '../constants/api';
 
+const RENDER_TIMEOUT = 60000;
+
 export const identityApi = axios.create({
   baseURL: API_BASE_URLS.IDENTITY_SERVICE,
-  timeout: 10000,
+  timeout: RENDER_TIMEOUT,
   headers: { 'Content-Type': 'application/json' },
 });
 
 export const treatmentApi = axios.create({
   baseURL: API_BASE_URLS.TREATMENT_SERVICE,
-  timeout: 10000,
+  timeout: RENDER_TIMEOUT,
   headers: { 'Content-Type': 'application/json' },
 });
 
 export const appointmentApi = axios.create({
   baseURL: API_BASE_URLS.APPOINTMENT_SERVICE,
-  timeout: 10000,
+  timeout: RENDER_TIMEOUT,
   headers: { 'Content-Type': 'application/json' },
 });
 
 export const followUpApi = axios.create({
   baseURL: API_BASE_URLS.FOLLOW_UP_SERVICE,
-  timeout: 10000,
+  timeout: RENDER_TIMEOUT,
   headers: { 'Content-Type': 'application/json' },
 });
 
 export const analysisApi = axios.create({
   baseURL: API_BASE_URLS.ANALYSIS_SERVICE,
-  timeout: 10000,
+  timeout: RENDER_TIMEOUT,
   headers: { 'Content-Type': 'application/json' },
 });
 
 export const reminderApi = axios.create({
   baseURL: API_BASE_URLS.REMINDER_SERVICE,
-  timeout: 10000,
+  timeout: RENDER_TIMEOUT,
   headers: { 'Content-Type': 'application/json' },
 });
 

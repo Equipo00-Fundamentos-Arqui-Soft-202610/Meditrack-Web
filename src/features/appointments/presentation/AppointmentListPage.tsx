@@ -136,7 +136,6 @@ export const AppointmentListPage = () => {
                 <TableCell sx={{ fontWeight: 600 }}>Nombre completo</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>DNI</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Edad</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Estado</TableCell>
                 <TableCell sx={{ fontWeight: 600 }} align="right">Accion</TableCell>
               </TableRow>
             </TableHead>
@@ -144,15 +143,8 @@ export const AppointmentListPage = () => {
               {patients.map((p) => (
                 <TableRow key={p.patientId} hover>
                   <TableCell>{p.fullName}</TableCell>
-                  <TableCell>{p.dni}</TableCell>
-                  <TableCell>{p.age}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={p.status === 'Active' ? 'Activo' : p.status === 'Inactive' ? 'Inactivo' : p.status}
-                      color={p.status === 'Active' ? 'success' : 'default'}
-                      size="small"
-                    />
-                  </TableCell>
+                  <TableCell>{p.dni ?? '—'}</TableCell>
+                  <TableCell>{p.age ?? '—'}</TableCell>
                   <TableCell align="right">
                     <Button
                       variant="contained"

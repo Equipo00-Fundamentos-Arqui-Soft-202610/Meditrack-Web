@@ -33,9 +33,9 @@ export const AppointmentCreatePage = () => {
       setPatient({
         patientId: Number(preselectedPatientId),
         fullName: locationState.patientName,
-        dni: '',
-        age: 0,
-        status: 'Active',
+        email: '',
+        dni: null,
+        age: null,
       });
       setPatientSearch(locationState.patientName);
     }

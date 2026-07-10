@@ -10,6 +10,8 @@ export interface RegisterRequest {
   email: string;
   password: string;
   role: UserRole;
+  dni?: string;
+  dateOfBirth?: string;
   // NOTA: el Identity Service todavía no tiene dónde guardar la institución
   // (IAM-RF2 pendiente) -- no se envía al backend, solo queda en el formulario.
   institucion?: string;
