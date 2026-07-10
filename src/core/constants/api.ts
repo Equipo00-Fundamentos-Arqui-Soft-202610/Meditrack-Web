@@ -40,10 +40,13 @@ export const ENDPOINTS = {
   },
   DASHBOARDS: {
     ADHERENCE_TREND: '/dashboards/adherence-trend',
+    ALL_ADHERENCE: '/dashboards/all-adherence',
   },
   STATISTICS: {
     COMPLIANCE: '/statistics/compliance',
     APPOINTMENTS: '/statistics/appointments',
+    COMPLIANCE_BY_MEDICATION: '/compliance/stats/by-medication',
+    APPOINTMENTS_BY_TYPE: '/appointments/statistics/by-type',
   },
   APPOINTMENTS: {
     BASE: '/appointments',
