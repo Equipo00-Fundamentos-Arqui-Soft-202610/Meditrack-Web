@@ -16,17 +16,21 @@ import { useAuth } from '../../../shared/contexts/AuthContext';
 
 const PIE_COLORS = ['#1565C0', '#26A69A', '#FB8C00', '#E53935', '#7B1FA2', '#00897B'];
 
-const today = new Date();
-const from = new Date(today.getTime() - 30 * 86400000).toISOString().split('T')[0];
-const to = today.toISOString().split('T')[0];
-
 export const DashboardPage = () => {
-  const { userId } = useAuth();
+  // userId identifica al personal técnico logueado, no a un paciente -- no
+  // corresponde usarlo como patientId. Estas dos tarjetas necesitan un
+  // paciente seleccionado (ver Historial Clínico / Pacientes), que este
+  // dashboard general todavía no ofrece, así que quedan deshabilitadas.
+  useAuth();
+
+  const today = new Date();
+  const from = new Date(today.getTime() - 30 * 86400000).toISOString().split('T')[0];
+  const to = today.toISOString().split('T')[0];
 
   const trendQuery = useQuery({
-    queryKey: ['adherence-trend', userId, from, to],
-    queryFn: () => dashboardService.getAdherenceTrend(userId!, from, to),
-    enabled: userId !== null,
+    queryKey: ['adherence-trend', from, to],
+    queryFn: () => dashboardService.getAdherenceTrend(0, from, to),
+    enabled: false,
   });
 
   const complianceQuery = useQuery({
@@ -40,9 +44,9 @@ export const DashboardPage = () => {
   });
 
   const stockQuery = useQuery({
-    queryKey: ['low-stock', userId],
-    queryFn: () => dashboardService.getLowStockMedications(userId!),
-    enabled: userId !== null,
+    queryKey: ['low-stock'],
+    queryFn: () => dashboardService.getLowStockMedications(0),
+    enabled: false,
   });
 
   const alertsQuery = useQuery({
@@ -50,8 +54,8 @@ export const DashboardPage = () => {
     queryFn: () => dashboardService.getPendingAlertsCount(),
   });
 
-  const loading = trendQuery.isLoading || complianceQuery.isLoading || appointmentQuery.isLoading;
-  const hasError = trendQuery.isError && complianceQuery.isError && appointmentQuery.isError;
+  const loading = complianceQuery.isLoading || appointmentQuery.isLoading || alertsQuery.isLoading;
+  const hasError = complianceQuery.isError || appointmentQuery.isError || alertsQuery.isError;
 
   const trendData = trendQuery.data ?? [];
   const avgAdherence = trendData.length > 0
@@ -95,7 +99,7 @@ export const DashboardPage = () => {
 };
 
 const renderSummaryCards = (avgAdherence: number | null, alertsCount: number | undefined, stockData: unknown) => {
-  const stockCount = Array.isArray(stockData) ? stockData.length : 0;
+  const stockCount = Array.isArray(stockData) ? stockData.length : null;
 
   const cards = [
     { label: 'Pacientes activos', value: '—', icon: <PeopleIcon />, color: '#1565C0' },
@@ -111,7 +115,7 @@ const renderSummaryCards = (avgAdherence: number | null, alertsCount: number | u
       icon: <WarningAmberIcon />,
       color: '#FB8C00',
     },
-    { label: 'Stock bajo', value: String(stockCount), icon: <CalendarTodayIcon />, color: '#E53935' },
+    { label: 'Stock bajo', value: stockCount !== null ? String(stockCount) : '—', icon: <CalendarTodayIcon />, color: '#E53935' },
   ];
 
   return (
@@ -157,7 +161,9 @@ const renderCharts = (
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <Typography variant="body2" color="text.secondary">Sin datos disponibles</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Selecciona un paciente en Historial Clínico o Pacientes para ver su tendencia de adherencia.
+            </Typography>
           )}
         </CardContent>
       </Card>
