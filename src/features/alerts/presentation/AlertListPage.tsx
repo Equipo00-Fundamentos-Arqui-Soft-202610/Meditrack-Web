@@ -13,6 +13,12 @@ const severityColor: Record<AlertSeverity, 'info' | 'warning' | 'error'> = {
   critical: 'error',
 };
 
+const severityLabel: Record<AlertSeverity, string> = {
+  info: 'Informativa',
+  warning: 'Advertencia',
+  critical: 'Crítica',
+};
+
 export const AlertListPage = () => {
   const queryClient = useQueryClient();
 
@@ -68,7 +74,7 @@ export const AlertListPage = () => {
                   <TableCell>{alert.patientId}</TableCell>
                   <TableCell>
                     <Chip
-                      label={alert.severity}
+                      label={severityLabel[alert.severity] ?? alert.severity}
                       color={severityColor[alert.severity] ?? 'default'}
                       size="small"
                     />
