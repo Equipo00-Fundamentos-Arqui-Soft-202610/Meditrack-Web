@@ -10,6 +10,7 @@ import { PrescriptionCreatePage } from './features/prescriptions/presentation/Pr
 import { AppointmentListPage } from './features/appointments/presentation/AppointmentListPage';
 import { AppointmentCreatePage } from './features/appointments/presentation/AppointmentCreatePage';
 import { ClinicalRecordListPage } from './features/clinical-records/presentation/ClinicalRecordListPage';
+import { ClinicalRecordDetailPage } from './features/clinical-records/presentation/ClinicalRecordDetailPage';
 import { ClinicalRecordImportPage } from './features/clinical-records/presentation/ClinicalRecordImportPage';
 import { AlertListPage } from './features/alerts/presentation/AlertListPage';
 import { ProfilePage } from './features/profile/presentation/ProfilePage';
@@ -32,6 +33,7 @@ const App = () => {
             <Route path="/appointments" element={<AppointmentListPage />} />
             <Route path="/appointments/new" element={<AppointmentCreatePage />} />
             <Route path="/clinical-records" element={<ClinicalRecordListPage />} />
+            <Route path="/clinical-records/patient/:patientId" element={<ClinicalRecordDetailPage />} />
             <Route path="/clinical-records/import" element={<ClinicalRecordImportPage />} />
             <Route path="/alerts" element={<AlertListPage />} />
             <Route path="/profile" element={<ProfilePage />} />
