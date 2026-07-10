@@ -3,7 +3,7 @@ import { Box, Drawer, AppBar, Toolbar, Typography, IconButton, List, ListItem, L
 import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import SearchIcon from '@mui/icons-material/Search';
-import MedicationIcon from '@mui/icons-material/Medication';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import HistoryIcon from '@mui/icons-material/History';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import PersonIcon from '@mui/icons-material/Person';
@@ -17,7 +17,7 @@ const DRAWER_WIDTH = 260;
 const NAV_ITEMS = [
   { label: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
   { label: 'Pacientes', icon: <SearchIcon />, path: '/patients' },
-  { label: 'Recetas', icon: <MedicationIcon />, path: '/prescriptions' },
+  { label: 'Citas', icon: <CalendarMonthIcon />, path: '/appointments' },
   { label: 'Historiales Clínicos', icon: <HistoryIcon />, path: '/clinical-records' },
   { label: 'Alertas', icon: <NotificationsIcon />, path: '/alerts' },
   { label: 'Perfil', icon: <PersonIcon />, path: '/profile' },

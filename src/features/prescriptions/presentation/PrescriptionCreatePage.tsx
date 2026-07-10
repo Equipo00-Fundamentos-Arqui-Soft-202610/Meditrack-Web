@@ -80,7 +80,7 @@ export const PrescriptionCreatePage = () => {
       if (patient) {
         navigate(`/patients/${patient.patientId}`, { state: patient });
       } else {
-        navigate('/prescriptions');
+        navigate('/patients');
       }
     },
     onError: () => setError('Error al crear la prescripción. Verifica los datos e intenta nuevamente.'),
@@ -113,7 +113,7 @@ export const PrescriptionCreatePage = () => {
             ? {
                 ...med,
                 catalogId: item.id,
-                catalogName: `${item.name} ${item.concentration} - ${item.pharmaceuticalForm}`,
+                catalogName: `${item.officialName} (${item.category})`,
               }
             : med,
         ),
@@ -159,7 +159,7 @@ export const PrescriptionCreatePage = () => {
     <Box>
       <Button
         startIcon={<ArrowBackIcon />}
-        onClick={() => patient ? navigate(`/patients/${patient.patientId}`, { state: patient }) : navigate('/prescriptions')}
+        onClick={() => patient ? navigate(`/patients/${patient.patientId}`, { state: patient }) : navigate('/patients')}
         sx={{ mb: 2 }}
       >
         Volver
@@ -244,7 +244,7 @@ export const PrescriptionCreatePage = () => {
                 <Grid size={{ xs: 12 }}>
                   <Autocomplete
                     options={catalog}
-                    getOptionLabel={(opt) => `${opt.name} ${opt.concentration} - ${opt.pharmaceuticalForm}`}
+                    getOptionLabel={(opt) => `${opt.officialName} (${opt.category})`}
                     onChange={(_, val) => handleCatalogSelect(index, val)}
                     renderInput={(params) => (
                       <TextField {...params} label="Medicamento del catálogo" required fullWidth />
@@ -310,7 +310,7 @@ export const PrescriptionCreatePage = () => {
       <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
         <Button
           variant="outlined"
-          onClick={() => patient ? navigate(`/patients/${patient.patientId}`, { state: patient }) : navigate('/prescriptions')}
+          onClick={() => patient ? navigate(`/patients/${patient.patientId}`, { state: patient }) : navigate('/patients')}
         >
           Cancelar
         </Button>

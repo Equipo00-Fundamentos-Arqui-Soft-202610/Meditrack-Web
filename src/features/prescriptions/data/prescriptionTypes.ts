@@ -1,9 +1,8 @@
 export interface MedicationCatalogItem {
   id: number;
-  name: string;
-  concentration: string;
-  pharmaceuticalForm: string;
-  unit: string;
+  officialName: string;
+  synonyms: string;
+  category: string;
 }
 
 export interface Medication {
