@@ -32,7 +32,7 @@ export const DashboardLayout = () => {
   const drawer = (
     <Box>
       <Toolbar sx={{ gap: 1, px: 2 }}>
-        <Avatar src="/meditrack-logo.png" alt="MediTrack" sx={{ width: 36, height: 36 }} />
+        <Avatar src="/favicon.svg" alt="MediTrack" sx={{ width: 36, height: 36 }} />
         <Typography variant="h6" color="primary" sx={{ fontWeight: 700 }}>MediTrack</Typography>
       </Toolbar>
       <List>
