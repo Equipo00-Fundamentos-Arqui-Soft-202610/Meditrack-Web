@@ -14,9 +14,9 @@ export interface Patient {
 export interface PatientSearchResult {
   patientId: number;
   fullName: string;
-  dni: string;
-  age: number;
-  status: string;
+  email: string;
+  dni: string | null;
+  age: number | null;
 }
 
 export interface PatientSearchParams {

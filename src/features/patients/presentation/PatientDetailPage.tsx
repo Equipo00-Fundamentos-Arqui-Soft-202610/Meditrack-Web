@@ -5,12 +5,18 @@ import {
   TableContainer, TableHead, TableRow, Paper, Chip, Skeleton, Alert, Button,
   Divider,
 } from '@mui/material';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from 'recharts';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import { clinicalRecordService } from '../../clinical-records/data/clinicalRecordService';
 import { followUpMedicationService } from '../../prescriptions/data/followUpMedicationService';
+import { patientService } from '../data/patientService';
 import type { PatientSearchResult } from '../data/patientTypes';
 import type { ClinicalRecord } from '../../clinical-records/data/clinicalRecordTypes';
 import type { FollowUpMedication } from '../../prescriptions/data/followUpMedicationService';
@@ -32,6 +38,12 @@ export const PatientDetailPage = () => {
   const medicationsQuery = useQuery({
     queryKey: ['followup-medications', patientId],
     queryFn: () => followUpMedicationService.getByPatientId(patientId),
+    enabled: !isNaN(patientId),
+  });
+
+  const adherenceQuery = useQuery({
+    queryKey: ['adherence-history', patientId],
+    queryFn: () => patientService.getAdherenceHistory(patientId),
     enabled: !isNaN(patientId),
   });
 
@@ -71,9 +83,8 @@ export const PatientDetailPage = () => {
           <Grid container spacing={2}>
             {patient && [
               { label: 'Nombre completo', value: patient.fullName },
-              { label: 'DNI', value: patient.dni },
-              { label: 'Edad', value: String(patient.age) },
-              { label: 'Estado', value: patient.status },
+              { label: 'DNI', value: patient.dni ?? '—' },
+              { label: 'Edad', value: patient.age != null ? String(patient.age) : '—' },
             ].map((row) => (
               <Grid size={{ xs: 12, sm: 3 }} key={row.label}>
                 <Typography variant="body2" color="text.secondary">{row.label}</Typography>
@@ -90,6 +101,27 @@ export const PatientDetailPage = () => {
           </Grid>
         </CardContent>
       </Card>
+
+      {/* Adherence trend */}
+      {adherenceQuery.data && adherenceQuery.data.length > 0 && (
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              <TrendingUpIcon color="primary" />
+              <Typography variant="h6">Tendencia de adherencia</Typography>
+            </Box>
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={adherenceQuery.data}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
+                <Tooltip />
+                <Line type="monotone" dataKey="percentage" stroke="#1565C0" strokeWidth={2} dot={{ r: 3 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Prescriptions styled as medical document */}
       <Card sx={{ mb: 3 }}>
@@ -133,7 +165,16 @@ export const PatientDetailPage = () => {
                         </Typography>
                       </Box>
                     </Box>
-                    <Chip label="Activa" color="success" size="small" />
+                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                      <Chip label="Activa" color="success" size="small" />
+                      <Button
+                        size="small"
+                        startIcon={<EditIcon />}
+                        onClick={() => navigate(`/medications/${med.id}/edit`, { state: med })}
+                      >
+                        Editar
+                      </Button>
+                    </Box>
                   </Box>
 
                   <Divider sx={{ mb: 2 }} />

@@ -117,7 +117,7 @@ export const ClinicalRecordDetailPage = () => {
             <Box>
               <Typography variant="caption" color="text.secondary">Estado</Typography>
               <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                {patient?.status === 'Active' ? 'Activo' : patient?.status ?? '--'}
+                Activo
               </Typography>
             </Box>
             <Box>

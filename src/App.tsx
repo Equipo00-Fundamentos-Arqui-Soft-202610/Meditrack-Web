@@ -6,6 +6,7 @@ import { RegisterPage } from './features/auth/presentation/RegisterPage';
 import { DashboardPage } from './features/dashboard/presentation/DashboardPage';
 import { PatientListPage } from './features/patients/presentation/PatientListPage';
 import { PatientDetailPage } from './features/patients/presentation/PatientDetailPage';
+import { MedicationEditPage } from './features/patients/presentation/MedicationEditPage';
 import { PrescriptionCreatePage } from './features/prescriptions/presentation/PrescriptionCreatePage';
 import { AppointmentListPage } from './features/appointments/presentation/AppointmentListPage';
 import { AppointmentCreatePage } from './features/appointments/presentation/AppointmentCreatePage';
@@ -29,6 +30,7 @@ const App = () => {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/patients" element={<PatientListPage />} />
             <Route path="/patients/:id" element={<PatientDetailPage />} />
+            <Route path="/medications/:id/edit" element={<MedicationEditPage />} />
             <Route path="/prescriptions/new" element={<PrescriptionCreatePage />} />
             <Route path="/appointments" element={<AppointmentListPage />} />
             <Route path="/appointments/new" element={<AppointmentCreatePage />} />

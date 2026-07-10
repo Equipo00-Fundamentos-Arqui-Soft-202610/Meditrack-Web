@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import {
   Box, TextField, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, Paper, Typography, Skeleton, Alert, InputAdornment, Button,
-  Chip,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -84,7 +83,6 @@ export const PatientListPage = () => {
                 <TableCell sx={{ fontWeight: 600 }}>Nombre completo</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>DNI</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Edad</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Estado</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Acciones</TableCell>
               </TableRow>
             </TableHead>
@@ -92,15 +90,8 @@ export const PatientListPage = () => {
               {patients.map((patient) => (
                 <TableRow key={patient.patientId} hover>
                   <TableCell>{patient.fullName}</TableCell>
-                  <TableCell>{patient.dni}</TableCell>
-                  <TableCell>{patient.age}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={patient.status}
-                      color={patient.status === 'Active' ? 'success' : 'default'}
-                      size="small"
-                    />
-                  </TableCell>
+                  <TableCell>{patient.dni ?? '—'}</TableCell>
+                  <TableCell>{patient.age ?? '—'}</TableCell>
                   <TableCell>
                     <Button
                       size="small"
