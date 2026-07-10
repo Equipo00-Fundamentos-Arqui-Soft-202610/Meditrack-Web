@@ -9,11 +9,11 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { clinicalRecordService } from '../data/clinicalRecordService';
 import { patientService } from '../../patients/data/patientService';
-import type { Patient } from '../../patients/data/patientTypes';
+import type { PatientSearchResult } from '../../patients/data/patientTypes';
 
 export const ClinicalRecordImportPage = () => {
   const navigate = useNavigate();
-  const [patient, setPatient] = useState<Patient | null>(null);
+  const [patient, setPatient] = useState<PatientSearchResult | null>(null);
   const [patientSearch, setPatientSearch] = useState('');
   const [recordType, setRecordType] = useState('');
   const [description, setDescription] = useState('');
@@ -31,7 +31,7 @@ export const ClinicalRecordImportPage = () => {
   const importMutation = useMutation({
     mutationFn: () =>
       clinicalRecordService.import({
-        patientId: patient!.id,
+        patientId: patient!.patientId,
         recordType,
         description,
         recordDate,
@@ -42,7 +42,7 @@ export const ClinicalRecordImportPage = () => {
     onError: () => setError('Error al importar el registro clínico. Verifica los datos e intenta nuevamente.'),
   });
 
-  const patientOptions: Patient[] = patientQuery.data?.patients ?? [];
+  const patientOptions: PatientSearchResult[] = patientQuery.data?.patients ?? [];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -74,7 +74,7 @@ export const ClinicalRecordImportPage = () => {
             <Grid size={{ xs: 12, md: 6 }}>
               <Autocomplete
                 options={patientOptions}
-                getOptionLabel={(opt) => `${opt.names} ${opt.lastName} - ${opt.documentNumber}`}
+                getOptionLabel={(opt) => `${opt.fullName} - ${opt.dni}`}
                 value={patient}
                 onChange={(_, val) => setPatient(val)}
                 inputValue={patientSearch}

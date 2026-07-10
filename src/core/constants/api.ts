@@ -18,13 +18,9 @@ export const ENDPOINTS = {
   PRESCRIPTIONS: {
     BASE: '/prescriptions',
     CREATE: '/prescriptions',
-    BY_ID: (id: number) => `/prescriptions/${id}`,
-    SEARCH: '/prescriptions/search',
-    BY_PATIENT: (patientId: number) => `/prescriptions?patientId=${patientId}`,
   },
   MEDICATIONS: {
     BASE: '/medications',
-    BY_PRESCRIPTION: (id: number) => `/medications?prescriptionId=${id}`,
     BY_PATIENT: (patientId: number) => `/medications?patientId=${patientId}`,
   },
   MEDICATION_CATALOG: {
@@ -50,9 +46,6 @@ export const ENDPOINTS = {
   APPOINTMENTS: {
     BASE: '/appointments',
     BY_PATIENT: (patientId: number) => `/appointments?patientId=${patientId}`,
-  },
-  CLINICAL_EXAMS: {
-    PENDING: '/clinical-exams/pending',
   },
   COMPLIANCE: {
     BASE: '/compliance',

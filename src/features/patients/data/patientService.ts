@@ -1,7 +1,7 @@
 import { treatmentApi, followUpApi, appointmentApi } from '../../../core/api/apiClient';
 import { ENDPOINTS } from '../../../core/constants/api';
 import type {
-  Patient,
+  PatientSearchResult,
   PatientSearchParams,
   PatientSearchResponse,
   AdherenceHistoryPoint,
@@ -10,35 +10,46 @@ import type {
 
 export const patientService = {
   search: async (params: PatientSearchParams): Promise<PatientSearchResponse> => {
-    const { data } = await treatmentApi.get(ENDPOINTS.PATIENTS.SEARCH, { params });
-    return data;
-  },
-
-  getById: async (id: number): Promise<Patient> => {
-    const { data } = await treatmentApi.get(`/patients/${id}`);
-    return data;
+    try {
+      const { data } = await treatmentApi.get(ENDPOINTS.PATIENTS.SEARCH, {
+        params: { query: params.searchTerm },
+      });
+      const patients: PatientSearchResult[] = Array.isArray(data) ? data : [];
+      return { patients, totalCount: patients.length, page: 1, pageSize: 50 };
+    } catch (err: unknown) {
+      if (
+        err && typeof err === 'object' && 'response' in err
+      ) {
+        const status = (err as { response?: { status?: number } }).response?.status;
+        if (status === 404) return { patients: [], totalCount: 0, page: 1, pageSize: 50 };
+      }
+      throw err;
+    }
   },
 
   getAdherenceHistory: async (
     patientId: number,
-    from: string,
-    to: string,
   ): Promise<AdherenceHistoryPoint[]> => {
-    const { data } = await followUpApi.get(ENDPOINTS.ADHERENCE_HISTORY, {
-      params: { patientId, from, to },
-    });
-    return data;
+    try {
+      const { data } = await followUpApi.get(ENDPOINTS.ADHERENCE_HISTORY, {
+        params: { patientId },
+      });
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   },
 
   getAppointments: async (
     patientId: number,
-    from: string,
-    to: string,
   ): Promise<PatientAppointment[]> => {
-    const { data } = await appointmentApi.get(
-      ENDPOINTS.APPOINTMENTS.BY_PATIENT(patientId),
-      { params: { from, to } },
-    );
-    return data;
+    try {
+      const { data } = await appointmentApi.get(
+        ENDPOINTS.APPOINTMENTS.BY_PATIENT(patientId),
+      );
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   },
 };
