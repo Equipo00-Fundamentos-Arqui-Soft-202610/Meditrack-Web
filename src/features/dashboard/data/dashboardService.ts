@@ -1,24 +1,51 @@
-import { analysisApi, followUpApi } from '../../../core/api/apiClient';
+import { analysisApi, followUpApi, appointmentApi } from '../../../core/api/apiClient';
 import { ENDPOINTS } from '../../../core/constants/api';
 
+export interface AdherenceByPatient {
+  patientId: number;
+  category: string;
+  totalScheduled: number;
+  totalCompliant: number;
+  totalMissed: number;
+  rate: number;
+  lastUpdatedAt: string;
+}
+
+export interface ComplianceByMedication {
+  medicationName: string;
+  totalDoses: number;
+  takenDoses: number;
+  missedDoses: number;
+  complianceRate: number;
+}
+
+export interface AppointmentByType {
+  type: string;
+  count: number;
+}
+
 export const dashboardService = {
-  getAdherenceTrend: async (patientId: number, from: string, to: string) => {
-    const { data } = await analysisApi.get(ENDPOINTS.DASHBOARDS.ADHERENCE_TREND, {
-      params: { patientId, from, to },
-    });
-    const points = data.points ?? data.metrics ?? data;
-    if (!Array.isArray(points)) return [];
-    return points.map((p: { rate: number; lastUpdatedAt: string; category?: string }) => ({
-      date: p.lastUpdatedAt?.split('T')[0] ?? '',
-      percentage: p.rate,
-    }));
+  getAllAdherence: async (): Promise<AdherenceByPatient[]> => {
+    try {
+      const { data } = await analysisApi.get(ENDPOINTS.DASHBOARDS.ALL_ADHERENCE);
+      return data.metrics ?? [];
+    } catch {
+      return [];
+    }
   },
 
-  getComplianceStatistics: async (category: string, from: string, to: string) => {
+  getComplianceByMedication: async (): Promise<ComplianceByMedication[]> => {
     try {
-      const { data } = await analysisApi.get(ENDPOINTS.STATISTICS.COMPLIANCE, {
-        params: { category, from, to },
-      });
+      const { data } = await followUpApi.get(ENDPOINTS.STATISTICS.COMPLIANCE_BY_MEDICATION);
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
+  },
+
+  getAppointmentsByType: async (): Promise<AppointmentByType[]> => {
+    try {
+      const { data } = await appointmentApi.get(ENDPOINTS.STATISTICS.APPOINTMENTS_BY_TYPE);
       return Array.isArray(data) ? data : [];
     } catch {
       return [];
@@ -33,17 +60,6 @@ export const dashboardService = {
       return Array.isArray(data) ? data.length : 0;
     } catch {
       return 0;
-    }
-  },
-
-  getAppointmentStatistics: async (from: string, to: string) => {
-    try {
-      const { data } = await analysisApi.get(ENDPOINTS.STATISTICS.APPOINTMENTS, {
-        params: { from, to },
-      });
-      return Array.isArray(data) ? data : [];
-    } catch {
-      return [];
     }
   },
 

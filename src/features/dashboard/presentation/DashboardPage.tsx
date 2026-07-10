@@ -1,59 +1,50 @@
 import { useQuery } from '@tanstack/react-query';
 import {
-  Box, Grid, Card, CardContent, Typography, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Paper, Chip, Skeleton, Alert,
+  Box, Grid, Card, CardContent, Typography, Skeleton, Alert,
 } from '@mui/material';
 import {
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList,
 } from 'recharts';
-import PeopleIcon from '@mui/icons-material/People';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { dashboardService } from '../data/dashboardService';
-import { useAuth } from '../../../shared/contexts/AuthContext';
+import type { AdherenceByPatient, ComplianceByMedication, AppointmentByType } from '../data/dashboardService';
 
-const PIE_COLORS = ['#1565C0', '#26A69A', '#FB8C00', '#E53935', '#7B1FA2', '#00897B'];
+const COLORS = ['#1565C0', '#26A69A', '#FB8C00', '#E53935', '#7B1FA2', '#00897B'];
+const LOW_COMPLIANCE_THRESHOLD = 70;
 
 export const DashboardPage = () => {
-  // userId identifica al personal técnico logueado, no a un paciente -- no
-  // corresponde usarlo como patientId. Estas dos tarjetas necesitan un
-  // paciente seleccionado (ver Historial Clínico / Pacientes), que este
-  // dashboard general todavía no ofrece, así que quedan deshabilitadas.
-  useAuth();
-
-  const today = new Date();
-  const from = new Date(today.getTime() - 30 * 86400000).toISOString().split('T')[0];
-  const to = today.toISOString().split('T')[0];
-
-  const trendQuery = useQuery({
-    queryKey: ['adherence-trend', from, to],
-    queryFn: () => dashboardService.getAdherenceTrend(0, from, to),
-    enabled: false,
+  const adherenceQuery = useQuery({
+    queryKey: ['all-adherence'],
+    queryFn: () => dashboardService.getAllAdherence(),
   });
 
   const complianceQuery = useQuery({
-    queryKey: ['compliance-stats', from, to],
-    queryFn: () => dashboardService.getComplianceStatistics('medication', from, to),
+    queryKey: ['compliance-by-medication'],
+    queryFn: () => dashboardService.getComplianceByMedication(),
   });
 
   const appointmentQuery = useQuery({
-    queryKey: ['appointment-stats', from, to],
-    queryFn: () => dashboardService.getAppointmentStatistics(from, to),
+    queryKey: ['appointments-by-type'],
+    queryFn: () => dashboardService.getAppointmentsByType(),
   });
 
-  const stockQuery = useQuery({
-    queryKey: ['low-stock'],
-    queryFn: () => dashboardService.getLowStockMedications(0),
-    enabled: false,
+  const alertQuery = useQuery({
+    queryKey: ['pending-alerts'],
+    queryFn: () => dashboardService.getPendingAlertsCount(),
   });
 
-  const loading = complianceQuery.isLoading || appointmentQuery.isLoading;
-  const hasError = complianceQuery.isError || appointmentQuery.isError;
+  const loading = adherenceQuery.isLoading || complianceQuery.isLoading || appointmentQuery.isLoading;
+  const hasError = adherenceQuery.isError || complianceQuery.isError || appointmentQuery.isError;
 
-  const trendData = trendQuery.data ?? [];
-  const avgAdherence = trendData.length > 0
-    ? Math.round(trendData.reduce((sum: number, p: { percentage: number }) => sum + p.percentage, 0) / trendData.length)
+  const adherenceData: AdherenceByPatient[] = adherenceQuery.data ?? [];
+  const complianceData: ComplianceByMedication[] = complianceQuery.data ?? [];
+  const appointmentData: AppointmentByType[] = appointmentQuery.data ?? [];
+  const alertCount = alertQuery.data ?? 0;
+
+  const avgAdherence = adherenceData.length > 0
+    ? Math.round(adherenceData.reduce((sum, p) => sum + p.rate, 0) / adherenceData.length)
     : null;
 
   if (loading) {
@@ -78,7 +69,6 @@ export const DashboardPage = () => {
         <Alert severity="warning" sx={{ mb: 2 }}>
           No se pudieron cargar algunos datos del dashboard. Verifica que los microservicios estén corriendo.
         </Alert>
-        {renderCharts(trendQuery.data, complianceQuery.data, appointmentQuery.data, stockQuery.data)}
       </Box>
     );
   }
@@ -86,24 +76,16 @@ export const DashboardPage = () => {
   return (
     <Box>
       <Typography variant="h4" sx={{ mb: 3 }}>Dashboard</Typography>
-      {renderSummaryCards(avgAdherence, stockQuery.data)}
-      {renderCharts(trendQuery.data, complianceQuery.data, appointmentQuery.data, stockQuery.data)}
+      {renderSummaryCards(avgAdherence, alertCount)}
+      {renderCharts(adherenceData, complianceData, appointmentData)}
     </Box>
   );
 };
 
-const renderSummaryCards = (avgAdherence: number | null, stockData: unknown) => {
-  const stockCount = Array.isArray(stockData) ? stockData.length : null;
-
+const renderSummaryCards = (avgAdherence: number | null, alertCount: number) => {
   const cards = [
-    { label: 'Pacientes activos', value: '—', icon: <PeopleIcon />, color: '#1565C0' },
-    {
-      label: 'Adherencia promedio',
-      value: avgAdherence !== null ? `${avgAdherence} %` : '— %',
-      icon: <TrendingUpIcon />,
-      color: '#26A69A',
-    },
-    { label: 'Stock bajo', value: stockCount !== null ? String(stockCount) : '—', icon: <CalendarTodayIcon />, color: '#E53935' },
+    { label: 'Adherencia promedio', value: avgAdherence !== null ? `${avgAdherence} %` : '— %', icon: <TrendingUpIcon />, color: '#26A69A' },
+    { label: 'Alertas activas', value: String(alertCount), icon: <WarningAmberIcon />, color: '#E53935' },
   ];
 
   return (
@@ -128,45 +110,51 @@ const renderSummaryCards = (avgAdherence: number | null, stockData: unknown) => 
 };
 
 const renderCharts = (
-  trendData: unknown,
-  complianceData: unknown,
-  appointmentData: unknown,
-  stockData: unknown,
+  adherenceData: AdherenceByPatient[],
+  complianceData: ComplianceByMedication[],
+  appointmentData: AppointmentByType[],
 ) => (
   <Grid container spacing={3}>
+    {/* US16: Tendencia de adherencia por paciente */}
     <Grid size={{ xs: 12, md: 8 }}>
       <Card>
         <CardContent>
-          <Typography variant="h6" sx={{ mb: 2 }}>Tendencia de adherencia</Typography>
-          {Array.isArray(trendData) && trendData.length > 0 ? (
+          <Typography variant="h6" sx={{ mb: 2 }}>Tendencia de adherencia por paciente</Typography>
+          {adherenceData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={trendData}>
+              <BarChart data={adherenceData.map(a => ({ name: `Paciente ${a.patientId}`, rate: a.rate }))}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Line type="monotone" dataKey="percentage" stroke="#1565C0" strokeWidth={2} dot={{ r: 3 }} />
-              </LineChart>
+                <Tooltip formatter={(value) => [`${value}%`, 'Adherencia']} />
+                <Bar dataKey="rate" name="Adherencia %" radius={[4, 4, 0, 0]}>
+                  {adherenceData.map((a, i) => (
+                    <Cell key={i} fill={a.rate >= 70 ? '#26A69A' : '#E53935'} />
+                  ))}
+                  <LabelList dataKey="rate" position="top" formatter={(v) => `${v}%`} />
+                </Bar>
+              </BarChart>
             </ResponsiveContainer>
           ) : (
             <Typography variant="body2" color="text.secondary">
-              Selecciona un paciente en Historial Clínico o Pacientes para ver su tendencia de adherencia.
+              Sin datos disponibles para mostrar tendencias
             </Typography>
           )}
         </CardContent>
       </Card>
     </Grid>
 
+    {/* US18: Citas por tipo */}
     <Grid size={{ xs: 12, md: 4 }}>
       <Card>
         <CardContent>
           <Typography variant="h6" sx={{ mb: 2 }}>Citas por tipo</Typography>
-          {Array.isArray(appointmentData) && appointmentData.length > 0 ? (
+          {appointmentData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie data={appointmentData} dataKey="count" nameKey="type" cx="50%" cy="50%" outerRadius={90} label>
                   {appointmentData.map((_: unknown, i: number) => (
-                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip />
@@ -174,63 +162,44 @@ const renderCharts = (
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <Typography variant="body2" color="text.secondary">Sin datos disponibles</Typography>
+            <Typography variant="body2" color="text.secondary">
+              No hay datos de citas disponibles
+            </Typography>
           )}
         </CardContent>
       </Card>
     </Grid>
 
+    {/* US17: Cumplimiento por receta */}
     <Grid size={{ xs: 12 }}>
       <Card>
         <CardContent>
           <Typography variant="h6" sx={{ mb: 2 }}>Cumplimiento por receta</Typography>
-          {Array.isArray(complianceData) && complianceData.length > 0 ? (
+          {complianceData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={complianceData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="category" tick={{ fontSize: 12 }} />
+                <XAxis dataKey="medicationName" tick={{ fontSize: 12 }} />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Bar dataKey="complianceRate" name="Tasa de cumplimiento %" fill="#26A69A" radius={[4, 4, 0, 0]} />
+                <Tooltip formatter={(value) => [`${value}%`, 'Cumplimiento']} />
+                <Bar dataKey="complianceRate" name="Tasa de cumplimiento %" radius={[4, 4, 0, 0]}>
+                  {complianceData.map((entry, i) => (
+                    <Cell
+                      key={i}
+                      fill={entry.complianceRate < LOW_COMPLIANCE_THRESHOLD ? '#E53935' : '#26A69A'}
+                    />
+                  ))}
+                  <LabelList dataKey="complianceRate" position="top" formatter={(v) => `${v}%`} />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <Typography variant="body2" color="text.secondary">Sin datos disponibles</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Sin datos disponibles
+            </Typography>
           )}
         </CardContent>
       </Card>
     </Grid>
-
-    {Array.isArray(stockData) && stockData.length > 0 && (
-      <Grid size={{ xs: 12 }}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" sx={{ mb: 2 }}>Medicamentos con stock bajo</Typography>
-            <TableContainer component={Paper} variant="outlined">
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Medicamento</TableCell>
-                    <TableCell>Stock actual</TableCell>
-                    <TableCell>Umbral</TableCell>
-                    <TableCell>Estado</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {stockData.map((item: { medicationName: string; stockCount: number; stockAlertThreshold: number }) => (
-                    <TableRow key={item.medicationName}>
-                      <TableCell>{item.medicationName}</TableCell>
-                      <TableCell>{item.stockCount}</TableCell>
-                      <TableCell>{item.stockAlertThreshold}</TableCell>
-                      <TableCell><Chip label="Stock bajo" color="warning" size="small" /></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </CardContent>
-        </Card>
-      </Grid>
-    )}
   </Grid>
 );
