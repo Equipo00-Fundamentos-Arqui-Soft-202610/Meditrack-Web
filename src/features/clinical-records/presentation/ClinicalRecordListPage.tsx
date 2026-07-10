@@ -1,126 +1,138 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Box, TextField, Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Paper, Typography, Skeleton, Alert, Chip, Button, InputAdornment,
+  TableRow, Paper, Typography, Skeleton, Alert, Button, InputAdornment, Chip,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import PeopleIcon from '@mui/icons-material/People';
-import { clinicalRecordService } from '../data/clinicalRecordService';
-import type { ClinicalRecord } from '../data/clinicalRecordTypes';
-
-const sourceColor: Record<string, 'info' | 'success' | 'warning' | 'primary'> = {
-  'manual': 'info',
-  'imported': 'success',
-  'system': 'primary',
-};
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import HistoryIcon from '@mui/icons-material/History';
+import { patientService } from '../../patients/data/patientService';
+import type { PatientSearchResult } from '../../patients/data/patientTypes';
 
 export const ClinicalRecordListPage = () => {
   const navigate = useNavigate();
-  const [patientIdInput, setPatientIdInput] = useState('');
-  const [activePatientId, setActivePatientId] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  const query = useQuery({
-    queryKey: ['clinical-records', activePatientId],
-    queryFn: () => clinicalRecordService.getAll({ patientId: activePatientId! }),
-    enabled: activePatientId !== null && activePatientId > 0,
+  const searchQuery = useQuery({
+    queryKey: ['patients-clinical-search', debouncedSearch],
+    queryFn: () => patientService.search({ searchTerm: debouncedSearch }),
+    enabled: debouncedSearch.length > 0,
   });
 
-  const records: ClinicalRecord[] = query.data ?? [];
+  const patients: PatientSearchResult[] = searchQuery.data?.patients ?? [];
 
-  const handleSearch = () => {
-    const num = Number(patientIdInput);
-    if (!isNaN(num) && num > 0) {
-      setActivePatientId(num);
-    }
-  };
+  const handleSearch = useCallback(() => {
+    const val = searchTerm.trim();
+    if (val.length > 0) setDebouncedSearch(val);
+  }, [searchTerm]);
 
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Historial clínico</Typography>
+        <Typography variant="h4">Historial clinico</Typography>
         <Button
           variant="outlined"
-          startIcon={<PeopleIcon />}
-          onClick={() => navigate('/patients')}
+          startIcon={<HistoryIcon />}
+          onClick={() => navigate('/clinical-records/import')}
         >
-          Buscar paciente
+          Importar registro
         </Button>
       </Box>
 
-      <Alert severity="info" sx={{ mb: 3 }}>
-        Ingresa el <strong>ID interno del paciente</strong> (patientId) para consultar su historial.
-        Si no lo conoces, busca al paciente en la sección <strong>Pacientes</strong>.
-      </Alert>
+      <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
+        <Typography variant="subtitle1" sx={{ mb: 1.5 }}>
+          Buscar paciente por nombre o documento
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1.5 }}>
+          <TextField
+            placeholder="Ej: 12345678 o Juan Perez"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            sx={{ flex: 1 }}
+            size="small"
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+          <Button variant="contained" onClick={handleSearch} disabled={!searchTerm.trim()}>
+            Buscar
+          </Button>
+        </Box>
+      </Paper>
 
-      <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
-        <TextField
-          label="Patient ID"
-          value={patientIdInput}
-          onChange={(e) => setPatientIdInput(e.target.value)}
-          type="number"
-          sx={{ minWidth: 200 }}
-          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
-        <Button variant="contained" onClick={handleSearch} disabled={!patientIdInput}>
-          Buscar
-        </Button>
-      </Box>
-
-      {query.isLoading && (
+      {searchQuery.isLoading && (
         <Box>
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} variant="rounded" height={52} sx={{ mb: 1 }} />
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} variant="rounded" height={56} sx={{ mb: 1 }} />
           ))}
         </Box>
       )}
 
-      {query.isError && (
+      {searchQuery.isError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          Error al cargar registros clínicos. Verifica que el servicio esté corriendo.
+          Error al buscar pacientes. Verifica que el servicio este corriendo.
         </Alert>
       )}
 
-      {!query.isLoading && !query.isError && activePatientId !== null && records.length === 0 && (
-        <Alert severity="info">
-          No se encontraron registros clínicos para el paciente {activePatientId}.
+      {!searchQuery.isLoading && !searchQuery.isError && debouncedSearch && patients.length === 0 && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          No se encontraron pacientes con el termino "<strong>{debouncedSearch}</strong>".
         </Alert>
       )}
 
-      {records.length > 0 && (
+      {!searchQuery.isLoading && !searchQuery.isError && !debouncedSearch && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Ingresa el <strong>nombre</strong> o <strong>numero de documento (DNI)</strong> de un paciente para consultar su historial clinico.
+        </Alert>
+      )}
+
+      {patients.length > 0 && (
         <TableContainer component={Paper} variant="outlined">
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>Fecha</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Diagnóstico</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Fuente</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Notas</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Nombre completo</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>DNI</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Edad</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Estado</TableCell>
+                <TableCell sx={{ fontWeight: 600 }} align="right">Accion</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {records.map((record) => (
-                <TableRow key={record.id}>
-                  <TableCell>{record.recordDate?.split('T')[0]}</TableCell>
-                  <TableCell>{record.diagnosis}</TableCell>
+              {patients.map((p) => (
+                <TableRow key={p.patientId} hover>
+                  <TableCell>{p.fullName}</TableCell>
+                  <TableCell>{p.dni}</TableCell>
+                  <TableCell>{p.age}</TableCell>
                   <TableCell>
                     <Chip
-                      label={record.source}
-                      color={sourceColor[record.source] ?? 'info'}
+                      label={p.status === 'Active' ? 'Activo' : p.status === 'Inactive' ? 'Inactivo' : p.status}
+                      color={p.status === 'Active' ? 'success' : 'default'}
                       size="small"
                     />
                   </TableCell>
-                  <TableCell>{record.notes}</TableCell>
+                  <TableCell align="right">
+                    <Button
+                      variant="contained"
+                      size="small"
+                      startIcon={<VisibilityIcon />}
+                      onClick={() => navigate(`/clinical-records/patient/${p.patientId}`, {
+                        state: { patient: p },
+                      })}
+                    >
+                      Ver historial clinico
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

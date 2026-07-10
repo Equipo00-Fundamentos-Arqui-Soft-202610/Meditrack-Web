@@ -7,6 +7,7 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddIcon from '@mui/icons-material/Add';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
 import { clinicalRecordService } from '../../clinical-records/data/clinicalRecordService';
 import { followUpMedicationService } from '../../prescriptions/data/followUpMedicationService';
@@ -222,27 +223,41 @@ export const PatientDetailPage = () => {
       {/* Clinical records */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Typography variant="h6" sx={{ mb: 2 }}>Historial clínico</Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6">Historial clinico</Typography>
+            {records.length > 0 && (
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<VisibilityIcon />}
+                onClick={() => navigate(`/clinical-records/patient/${patientId}`, {
+                  state: { patient },
+                })}
+              >
+                Ver historial completo
+              </Button>
+            )}
+          </Box>
           {recordsQuery.isLoading ? (
             <Skeleton variant="rounded" height={200} />
           ) : recordsQuery.isError ? (
-            <Alert severity="error">Error al cargar el historial clínico.</Alert>
+            <Alert severity="error">Error al cargar el historial clinico.</Alert>
           ) : records.length === 0 ? (
-            <Alert severity="info">No hay registros clínicos para este paciente.</Alert>
+            <Alert severity="info">No hay registros clinicos para este paciente.</Alert>
           ) : (
             <TableContainer component={Paper} variant="outlined">
               <Table size="small">
                 <TableHead>
                   <TableRow>
                     <TableCell sx={{ fontWeight: 600 }}>Fecha</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Diagnóstico</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Diagnostico</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Notas</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Fuente</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {records.map((record) => (
-                    <TableRow key={record.id}>
+                    <TableRow key={record.id} hover>
                       <TableCell>{record.recordDate?.split('T')[0]}</TableCell>
                       <TableCell>{record.diagnosis}</TableCell>
                       <TableCell>
@@ -250,7 +265,7 @@ export const PatientDetailPage = () => {
                           <Typography variant="body2" color="text.secondary">
                             {record.notes.length > 80 ? `${record.notes.substring(0, 80)}...` : record.notes}
                           </Typography>
-                        ) : '—'}
+                        ) : '--'}
                       </TableCell>
                       <TableCell>
                         <Chip label={record.source} size="small" color="info" />
