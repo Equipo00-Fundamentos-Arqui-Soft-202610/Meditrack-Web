@@ -31,7 +31,7 @@ export const DashboardPage = () => {
 
   const complianceQuery = useQuery({
     queryKey: ['compliance-stats', from, to],
-    queryFn: () => dashboardService.getComplianceStatistics('all', from, to),
+    queryFn: () => dashboardService.getComplianceStatistics('medication', from, to),
   });
 
   const appointmentQuery = useQuery({
@@ -45,8 +45,18 @@ export const DashboardPage = () => {
     enabled: userId !== null,
   });
 
+  const alertsQuery = useQuery({
+    queryKey: ['pending-alerts'],
+    queryFn: () => dashboardService.getPendingAlertsCount(),
+  });
+
   const loading = trendQuery.isLoading || complianceQuery.isLoading || appointmentQuery.isLoading;
-  const hasError = trendQuery.isError || complianceQuery.isError || appointmentQuery.isError;
+  const hasError = trendQuery.isError && complianceQuery.isError && appointmentQuery.isError;
+
+  const trendData = trendQuery.data ?? [];
+  const avgAdherence = trendData.length > 0
+    ? Math.round(trendData.reduce((sum: number, p: { percentage: number }) => sum + p.percentage, 0) / trendData.length)
+    : null;
 
   if (loading) {
     return (
@@ -78,23 +88,35 @@ export const DashboardPage = () => {
   return (
     <Box>
       <Typography variant="h4" sx={{ mb: 3 }}>Dashboard</Typography>
-      {renderSummaryCards(stockQuery.data)}
+      {renderSummaryCards(avgAdherence, alertsQuery.data, stockQuery.data)}
       {renderCharts(trendQuery.data, complianceQuery.data, appointmentQuery.data, stockQuery.data)}
     </Box>
   );
 };
 
-const renderSummaryCards = (stockData: unknown) => {
+const renderSummaryCards = (avgAdherence: number | null, alertsCount: number | undefined, stockData: unknown) => {
   const stockCount = Array.isArray(stockData) ? stockData.length : 0;
+
+  const cards = [
+    { label: 'Pacientes activos', value: '—', icon: <PeopleIcon />, color: '#1565C0' },
+    {
+      label: 'Adherencia promedio',
+      value: avgAdherence !== null ? `${avgAdherence} %` : '— %',
+      icon: <TrendingUpIcon />,
+      color: '#26A69A',
+    },
+    {
+      label: 'Alertas pendientes',
+      value: alertsCount != null ? String(alertsCount) : '—',
+      icon: <WarningAmberIcon />,
+      color: '#FB8C00',
+    },
+    { label: 'Stock bajo', value: String(stockCount), icon: <CalendarTodayIcon />, color: '#E53935' },
+  ];
 
   return (
     <Grid container spacing={3} sx={{ mb: 4 }}>
-      {[
-        { label: 'Pacientes activos', value: '—', icon: <PeopleIcon />, color: '#1565C0' },
-        { label: 'Adherencia promedio', value: '— %', icon: <TrendingUpIcon />, color: '#26A69A' },
-        { label: 'Alertas pendientes', value: '—', icon: <WarningAmberIcon />, color: '#FB8C00' },
-        { label: 'Stock bajo', value: String(stockCount), icon: <CalendarTodayIcon />, color: '#E53935' },
-      ].map((card) => (
+      {cards.map((card) => (
         <Grid size={{ xs: 12, sm: 6, md: 3 }} key={card.label}>
           <Card>
             <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -172,10 +194,10 @@ const renderCharts = (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={complianceData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="medicationName" tick={{ fontSize: 12 }} />
+                <XAxis dataKey="category" tick={{ fontSize: 12 }} />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
                 <Tooltip />
-                <Bar dataKey="complianceRate" fill="#26A69A" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="complianceRate" name="Tasa de cumplimiento %" fill="#26A69A" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (

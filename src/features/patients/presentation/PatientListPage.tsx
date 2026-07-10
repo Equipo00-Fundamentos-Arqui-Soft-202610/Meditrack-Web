@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Box, TextField, Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Paper, Typography, Skeleton, Alert, InputAdornment,
+  TableRow, Paper, Typography, Skeleton, Alert, InputAdornment, Button,
+  Chip,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import { patientService } from '../data/patientService';
-import type { Patient } from '../data/patientTypes';
+import type { PatientSearchResult } from '../data/patientTypes';
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -25,11 +27,11 @@ export const PatientListPage = () => {
 
   const query = useQuery({
     queryKey: ['patients', debounced],
-    queryFn: () => patientService.search({ searchTerm: debounced || undefined }),
-    enabled: true,
+    queryFn: () => patientService.search({ searchTerm: debounced }),
+    enabled: debounced.length > 0,
   });
 
-  const patients: Patient[] = query.data?.patients ?? [];
+  const patients: PatientSearchResult[] = query.data?.patients ?? [];
 
   return (
     <Box>
@@ -79,26 +81,35 @@ export const PatientListPage = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>N° Documento</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Apellidos y Nombres</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Teléfono</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Nombre completo</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>DNI</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Edad</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Estado</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Acciones</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {patients.map((patient) => (
-                <TableRow
-                  key={patient.id}
-                  hover
-                  onClick={() => navigate(`/patients/${patient.id}`)}
-                  sx={{ cursor: 'pointer' }}
-                >
-                  <TableCell>{patient.documentNumber}</TableCell>
+                <TableRow key={patient.patientId} hover>
+                  <TableCell>{patient.fullName}</TableCell>
+                  <TableCell>{patient.dni}</TableCell>
+                  <TableCell>{patient.age}</TableCell>
                   <TableCell>
-                    {patient.lastName} {patient.motherLastName}, {patient.names}
+                    <Chip
+                      label={patient.status}
+                      color={patient.status === 'Active' ? 'success' : 'default'}
+                      size="small"
+                    />
                   </TableCell>
-                  <TableCell>{patient.phone}</TableCell>
-                  <TableCell>{patient.email}</TableCell>
+                  <TableCell>
+                    <Button
+                      size="small"
+                      startIcon={<VisibilityIcon />}
+                      onClick={() => navigate(`/patients/${patient.patientId}`, { state: patient })}
+                    >
+                      Ver más
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

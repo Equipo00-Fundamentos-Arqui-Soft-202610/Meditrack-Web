@@ -6,8 +6,9 @@ import { RegisterPage } from './features/auth/presentation/RegisterPage';
 import { DashboardPage } from './features/dashboard/presentation/DashboardPage';
 import { PatientListPage } from './features/patients/presentation/PatientListPage';
 import { PatientDetailPage } from './features/patients/presentation/PatientDetailPage';
-import { PrescriptionListPage } from './features/prescriptions/presentation/PrescriptionListPage';
 import { PrescriptionCreatePage } from './features/prescriptions/presentation/PrescriptionCreatePage';
+import { AppointmentListPage } from './features/appointments/presentation/AppointmentListPage';
+import { AppointmentCreatePage } from './features/appointments/presentation/AppointmentCreatePage';
 import { ClinicalRecordListPage } from './features/clinical-records/presentation/ClinicalRecordListPage';
 import { ClinicalRecordImportPage } from './features/clinical-records/presentation/ClinicalRecordImportPage';
 import { AlertListPage } from './features/alerts/presentation/AlertListPage';
@@ -27,8 +28,9 @@ const App = () => {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/patients" element={<PatientListPage />} />
             <Route path="/patients/:id" element={<PatientDetailPage />} />
-            <Route path="/prescriptions" element={<PrescriptionListPage />} />
             <Route path="/prescriptions/new" element={<PrescriptionCreatePage />} />
+            <Route path="/appointments" element={<AppointmentListPage />} />
+            <Route path="/appointments/new" element={<AppointmentCreatePage />} />
             <Route path="/clinical-records" element={<ClinicalRecordListPage />} />
             <Route path="/clinical-records/import" element={<ClinicalRecordImportPage />} />
             <Route path="/alerts" element={<AlertListPage />} />

@@ -11,6 +11,14 @@ export interface Patient {
   address: string;
 }
 
+export interface PatientSearchResult {
+  patientId: number;
+  fullName: string;
+  dni: string;
+  age: number;
+  status: string;
+}
+
 export interface PatientSearchParams {
   searchTerm?: string;
   page?: number;
@@ -18,7 +26,7 @@ export interface PatientSearchParams {
 }
 
 export interface PatientSearchResponse {
-  patients: Patient[];
+  patients: PatientSearchResult[];
   totalCount: number;
   page: number;
   pageSize: number;

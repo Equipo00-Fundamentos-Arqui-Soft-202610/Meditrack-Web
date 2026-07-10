@@ -3,9 +3,9 @@ import { ENDPOINTS } from '../../../core/constants/api';
 import type { ClinicalRecord, ClinicalRecordImportPayload } from './clinicalRecordTypes';
 
 export const clinicalRecordService = {
-  getAll: async (params?: { patientId?: number; recordType?: string }): Promise<ClinicalRecord[]> => {
+  getAll: async (params?: { patientId?: number }): Promise<ClinicalRecord[]> => {
     const { data } = await analysisApi.get(ENDPOINTS.CLINICAL_RECORDS.BASE, { params });
-    return data;
+    return Array.isArray(data) ? data : [];
   },
 
   getByPatient: async (patientId: number): Promise<ClinicalRecord[]> => {

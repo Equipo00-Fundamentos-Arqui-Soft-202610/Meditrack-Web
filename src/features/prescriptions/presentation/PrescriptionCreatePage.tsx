@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Box, Grid, Card, CardContent, Typography, TextField, Button,
@@ -10,36 +10,58 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { prescriptionService } from '../data/prescriptionService';
 import { patientService } from '../../patients/data/patientService';
+import { useAuth } from '../../../shared/contexts/AuthContext';
 import type { CreatePrescriptionPayload, MedicationCatalogItem } from '../data/prescriptionTypes';
-import type { Patient } from '../../patients/data/patientTypes';
+import type { PatientSearchResult } from '../../patients/data/patientTypes';
 
 interface MedicationEntry {
-  medicationCatalogId: number;
-  medicationName: string;
-  dosage: string;
-  frequency: string;
-  duration: string;
-  notes: string;
+  catalogId: number;
+  catalogName: string;
+  dose: string;
+  frequencyHours: number;
+  startDate: string;
+  endDate: string;
+  stockCount: number;
+  stockAlertThreshold: number;
 }
 
 const emptyEntry = (): MedicationEntry => ({
-  medicationCatalogId: 0,
-  medicationName: '',
-  dosage: '',
-  frequency: '',
-  duration: '',
-  notes: '',
+  catalogId: 0,
+  catalogName: '',
+  dose: '',
+  frequencyHours: 8,
+  startDate: new Date().toISOString().split('T')[0],
+  endDate: '',
+  stockCount: 30,
+  stockAlertThreshold: 5,
 });
 
 export const PrescriptionCreatePage = () => {
   const navigate = useNavigate();
-  const [patient, setPatient] = useState<Patient | null>(null);
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const preselectedPatientId = searchParams.get('patientId');
+  const locationState = location.state as { patientId?: number; patientName?: string } | null;
+  const { userId } = useAuth();
+
+  const [patient, setPatient] = useState<PatientSearchResult | null>(null);
   const [patientSearch, setPatientSearch] = useState('');
-  const [issueDate, setIssueDate] = useState(new Date().toISOString().split('T')[0]);
-  const [expiryDate, setExpiryDate] = useState('');
   const [notes, setNotes] = useState('');
   const [medications, setMedications] = useState<MedicationEntry[]>([emptyEntry()]);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (preselectedPatientId && locationState?.patientName) {
+      setPatient({
+        patientId: Number(preselectedPatientId),
+        fullName: locationState.patientName,
+        dni: '',
+        age: 0,
+        status: 'Active',
+      });
+      setPatientSearch(locationState.patientName);
+    }
+  }, [preselectedPatientId, locationState]);
 
   const catalogQuery = useQuery({
     queryKey: ['medication-catalog'],
@@ -49,17 +71,23 @@ export const PrescriptionCreatePage = () => {
   const patientQuery = useQuery({
     queryKey: ['patients-search', patientSearch],
     queryFn: () => patientService.search({ searchTerm: patientSearch || undefined }),
-    enabled: patientSearch.length > 0,
+    enabled: patientSearch.length > 0 && !patient,
   });
 
   const createMutation = useMutation({
     mutationFn: (payload: CreatePrescriptionPayload) => prescriptionService.create(payload),
-    onSuccess: () => navigate('/prescriptions'),
+    onSuccess: () => {
+      if (patient) {
+        navigate(`/patients/${patient.patientId}`, { state: patient });
+      } else {
+        navigate('/patients');
+      }
+    },
     onError: () => setError('Error al crear la prescripción. Verifica los datos e intenta nuevamente.'),
   });
 
   const catalog: MedicationCatalogItem[] = catalogQuery.data ?? [];
-  const patientOptions: Patient[] = patientQuery.data?.patients ?? [];
+  const patientOptions: PatientSearchResult[] = patientQuery.data?.patients ?? [];
 
   const handleAddMedication = () => {
     setMedications((prev) => [...prev, emptyEntry()]);
@@ -84,8 +112,8 @@ export const PrescriptionCreatePage = () => {
           i === index
             ? {
                 ...med,
-                medicationCatalogId: item.id,
-                medicationName: `${item.name} ${item.concentration} - ${item.pharmaceuticalForm}`,
+                catalogId: item.id,
+                catalogName: `${item.officialName} (${item.category})`,
               }
             : med,
         ),
@@ -98,35 +126,43 @@ export const PrescriptionCreatePage = () => {
       setError('Debes seleccionar un paciente.');
       return;
     }
-    if (!expiryDate) {
-      setError('Debes indicar la fecha de vencimiento.');
+    if (userId == null) {
+      setError('No se pudo identificar al usuario técnico.');
       return;
     }
-    const validMeds = medications.filter((m) => m.medicationCatalogId > 0);
+    const validMeds = medications.filter((m) => m.catalogId > 0);
     if (validMeds.length === 0) {
-      setError('Debes agregar al menos un medicamento.');
+      setError('Debes agregar al menos un medicamento del catálogo.');
       return;
     }
     setError('');
-    createMutation.mutate({
-      patientId: patient.id,
-      issueDate,
-      expiryDate,
+
+    const payload: CreatePrescriptionPayload = {
+      patientId: patient.patientId,
+      technicalStaffId: userId,
       notes,
       medications: validMeds.map((m) => ({
-        medicationCatalogId: m.medicationCatalogId,
-        dosage: m.dosage,
-        frequency: m.frequency,
-        duration: m.duration,
-        notes: m.notes,
+        catalogId: m.catalogId,
+        dose: m.dose,
+        frequencyHours: m.frequencyHours,
+        startDate: m.startDate || new Date().toISOString(),
+        endDate: m.endDate || undefined,
+        stockCount: m.stockCount,
+        stockAlertThreshold: m.stockAlertThreshold,
+        doseSchedules: [{ scheduledTime: '08:00:00' }],
       })),
-    });
+    };
+    createMutation.mutate(payload);
   };
 
   return (
     <Box>
-      <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/prescriptions')} sx={{ mb: 2 }}>
-        Volver a prescripciones
+      <Button
+        startIcon={<ArrowBackIcon />}
+        onClick={() => patient ? navigate(`/patients/${patient.patientId}`, { state: patient }) : navigate('/patients')}
+        sx={{ mb: 2 }}
+      >
+        Volver
       </Button>
 
       <Typography variant="h4" sx={{ mb: 3 }}>Nueva prescripción</Typography>
@@ -135,51 +171,38 @@ export const PrescriptionCreatePage = () => {
 
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Typography variant="h6" sx={{ mb: 2 }}>Datos generales</Typography>
+          <Typography variant="h6" sx={{ mb: 2 }}>Paciente</Typography>
           <Grid container spacing={2}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Autocomplete
-                options={patientOptions}
-                getOptionLabel={(opt) => `${opt.names} ${opt.lastName} - ${opt.documentNumber}`}
-                value={patient}
-                onChange={(_, val) => setPatient(val)}
-                inputValue={patientSearch}
-                onInputChange={(_, val) => setPatientSearch(val)}
-                renderInput={(params) => (
-                  <TextField {...params} label="Paciente" required fullWidth />
-                )}
-                noOptionsText={patientSearch ? 'Paciente no encontrado' : 'Escribe para buscar'}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <TextField
-                label="Fecha de emisión"
-                type="date"
-                value={issueDate}
-                onChange={(e) => setIssueDate(e.target.value)}
-                fullWidth
-                slotProps={{ inputLabel: { shrink: true } }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <TextField
-                label="Fecha de vencimiento"
-                type="date"
-                value={expiryDate}
-                onChange={(e) => setExpiryDate(e.target.value)}
-                fullWidth
-                required
-                slotProps={{ inputLabel: { shrink: true } }}
-              />
+            <Grid size={{ xs: 12 }}>
+              {patient ? (
+                <Alert severity="success" sx={{ mb: 1 }}>
+                  Paciente seleccionado: <strong>{patient.fullName}</strong> (DNI: {patient.dni})
+                </Alert>
+              ) : (
+                <Autocomplete
+                  options={patientOptions}
+                  getOptionLabel={(opt) => `${opt.fullName} - ${opt.dni}`}
+                  value={patient}
+                  onChange={(_, val) => setPatient(val)}
+                  inputValue={patientSearch}
+                  onInputChange={(_, val) => setPatientSearch(val)}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Buscar paciente" required fullWidth />
+                  )}
+                  noOptionsText={patientSearch ? 'Paciente no encontrado' : 'Escribe para buscar'}
+                  slotProps={{ popper: { sx: { zIndex: 1400 } } }}
+                />
+              )}
             </Grid>
             <Grid size={{ xs: 12 }}>
               <TextField
-                label="Notas"
+                label="Notas generales"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 fullWidth
                 multiline
                 rows={2}
+                placeholder="Notas sobre la prescripción"
               />
             </Grid>
           </Grid>
@@ -204,64 +227,78 @@ export const PrescriptionCreatePage = () => {
                 border: 1,
                 borderColor: 'divider',
                 borderRadius: 1,
-                position: 'relative',
               }}
             >
-              <IconButton
-                size="small"
-                onClick={() => handleRemoveMedication(index)}
-                sx={{ position: 'absolute', top: 8, right: 8 }}
-                disabled={medications.length === 1}
-              >
-                <DeleteIcon />
-              </IconButton>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography variant="subtitle2">Medicamento #{index + 1}</Typography>
+                <IconButton
+                  size="small"
+                  onClick={() => handleRemoveMedication(index)}
+                  disabled={medications.length === 1}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
 
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12 }}>
                   <Autocomplete
                     options={catalog}
-                    getOptionLabel={(opt) => `${opt.name} ${opt.concentration} - ${opt.pharmaceuticalForm}`}
+                    getOptionLabel={(opt) => `${opt.officialName} (${opt.category})`}
                     onChange={(_, val) => handleCatalogSelect(index, val)}
                     renderInput={(params) => (
-                      <TextField {...params} label="Medicamento" required fullWidth />
+                      <TextField {...params} label="Medicamento del catálogo" required fullWidth />
                     )}
                     noOptionsText="No se encontraron medicamentos"
+                    slotProps={{ popper: { sx: { zIndex: 1400 } } }}
                   />
                 </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     label="Dosis"
-                    value={med.dosage}
-                    onChange={(e) => handleMedicationChange(index, 'dosage', e.target.value)}
+                    value={med.dose}
+                    onChange={(e) => handleMedicationChange(index, 'dose', e.target.value)}
                     fullWidth
                     placeholder="e.g. 500 mg"
                   />
                 </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
-                    label="Frecuencia"
-                    value={med.frequency}
-                    onChange={(e) => handleMedicationChange(index, 'frequency', e.target.value)}
+                    label="Frecuencia (horas)"
+                    value={med.frequencyHours}
+                    onChange={(e) => handleMedicationChange(index, 'frequencyHours', Number(e.target.value))}
                     fullWidth
-                    placeholder="e.g. Cada 8 horas"
+                    type="number"
+                    placeholder="e.g. 8"
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <TextField
-                    label="Duración"
-                    value={med.duration}
-                    onChange={(e) => handleMedicationChange(index, 'duration', e.target.value)}
+                    label="Fecha inicio"
+                    type="date"
+                    value={med.startDate}
+                    onChange={(e) => handleMedicationChange(index, 'startDate', e.target.value)}
                     fullWidth
-                    placeholder="e.g. 7 días"
+                    slotProps={{ inputLabel: { shrink: true } }}
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={{ xs: 12, sm: 4 }}>
                   <TextField
-                    label="Notas"
-                    value={med.notes}
-                    onChange={(e) => handleMedicationChange(index, 'notes', e.target.value)}
+                    label="Fecha fin"
+                    type="date"
+                    value={med.endDate}
+                    onChange={(e) => handleMedicationChange(index, 'endDate', e.target.value)}
                     fullWidth
-                    placeholder="Indicaciones adicionales"
+                    slotProps={{ inputLabel: { shrink: true } }}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <TextField
+                    label="Stock inicial"
+                    value={med.stockCount}
+                    onChange={(e) => handleMedicationChange(index, 'stockCount', Number(e.target.value))}
+                    fullWidth
+                    type="number"
                   />
                 </Grid>
               </Grid>
@@ -271,13 +308,16 @@ export const PrescriptionCreatePage = () => {
       </Card>
 
       <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-        <Button variant="outlined" onClick={() => navigate('/prescriptions')}>
+        <Button
+          variant="outlined"
+          onClick={() => patient ? navigate(`/patients/${patient.patientId}`, { state: patient }) : navigate('/patients')}
+        >
           Cancelar
         </Button>
         <Button
           variant="contained"
           onClick={handleSubmit}
-          disabled={createMutation.isPending}
+          disabled={createMutation.isPending || !patient}
         >
           {createMutation.isPending ? 'Guardando...' : 'Guardar prescripción'}
         </Button>

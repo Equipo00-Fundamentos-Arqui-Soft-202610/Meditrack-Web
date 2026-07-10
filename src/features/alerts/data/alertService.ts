@@ -3,9 +3,13 @@ import { ENDPOINTS } from '../../../core/constants/api';
 import type { Alert } from './alertTypes';
 
 export const alertService = {
-  getAll: async (params?: { patientId?: number; acknowledged?: boolean; severity?: string }): Promise<Alert[]> => {
-    const { data } = await analysisApi.get(ENDPOINTS.ALERTS.BASE, { params });
-    return data;
+  getAll: async (params?: { status?: string }): Promise<Alert[]> => {
+    try {
+      const { data } = await analysisApi.get(ENDPOINTS.ALERTS.BASE, { params });
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   },
 
   acknowledge: async (id: number): Promise<void> => {

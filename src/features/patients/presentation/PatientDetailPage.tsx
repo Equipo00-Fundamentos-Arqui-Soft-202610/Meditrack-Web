@@ -1,76 +1,46 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Box, Grid, Card, CardContent, Typography, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Paper, Chip, Skeleton, Alert, Button,
+  Divider,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-} from 'recharts';
-import { patientService } from '../data/patientService';
-
-const today = new Date();
-const from = new Date(today.getTime() - 30 * 86400000).toISOString().split('T')[0];
-const to = today.toISOString().split('T')[0];
+import AddIcon from '@mui/icons-material/Add';
+import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
+import { clinicalRecordService } from '../../clinical-records/data/clinicalRecordService';
+import { followUpMedicationService } from '../../prescriptions/data/followUpMedicationService';
+import type { PatientSearchResult } from '../data/patientTypes';
+import type { ClinicalRecord } from '../../clinical-records/data/clinicalRecordTypes';
+import type { FollowUpMedication } from '../../prescriptions/data/followUpMedicationService';
 
 export const PatientDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const patientId = Number(id);
 
-  const patientQuery = useQuery({
-    queryKey: ['patient', patientId],
-    queryFn: () => patientService.getById(patientId),
+  const patient = (location.state as PatientSearchResult | null);
+
+  const recordsQuery = useQuery({
+    queryKey: ['clinical-records', patientId],
+    queryFn: () => clinicalRecordService.getAll({ patientId }),
     enabled: !isNaN(patientId),
   });
 
-  const adherenceQuery = useQuery({
-    queryKey: ['adherence-history', patientId, from, to],
-    queryFn: () => patientService.getAdherenceHistory(patientId, from, to),
+  const medicationsQuery = useQuery({
+    queryKey: ['followup-medications', patientId],
+    queryFn: () => followUpMedicationService.getByPatientId(patientId),
     enabled: !isNaN(patientId),
   });
-
-  const appointmentsQuery = useQuery({
-    queryKey: ['patient-appointments', patientId, from, to],
-    queryFn: () => patientService.getAppointments(patientId, from, to),
-    enabled: !isNaN(patientId),
-  });
-
-  const loading = patientQuery.isLoading;
-  const error = patientQuery.isError;
 
   if (isNaN(patientId)) {
     return <Alert severity="error">ID de paciente inválido.</Alert>;
   }
 
-  if (loading) {
-    return (
-      <Box>
-        <Skeleton variant="rounded" height={200} sx={{ mb: 3 }} />
-        <Skeleton variant="rounded" height={300} />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/patients')} sx={{ mb: 2 }}>
-          Volver
-        </Button>
-        <Alert severity="error">
-          Error al cargar la información del paciente. Verifica que el servicio esté corriendo.
-        </Alert>
-      </Box>
-    );
-  }
-
-  const patient = patientQuery.data;
-  if (!patient) return null;
-
-  const adherenceData = Array.isArray(adherenceQuery.data) ? adherenceQuery.data : [];
-  const appointments = Array.isArray(appointmentsQuery.data) ? appointmentsQuery.data : [];
+  const records: ClinicalRecord[] = recordsQuery.data ?? [];
+  const medications: FollowUpMedication[] = medicationsQuery.data ?? [];
+  const activeMedications = medications.filter((m) => m.isActive);
 
   return (
     <Box>
@@ -78,98 +48,218 @@ export const PatientDetailPage = () => {
         Volver a pacientes
       </Button>
 
-      <Typography variant="h4" sx={{ mb: 3 }}>
-        {patient.names} {patient.lastName} {patient.motherLastName}
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4">
+          {patient?.fullName ?? `Paciente #${patientId}`}
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => navigate(`/prescriptions/new?patientId=${patientId}`, {
+            state: { patientId, patientName: patient?.fullName },
+          })}
+        >
+          Nueva receta
+        </Button>
+      </Box>
 
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2 }}>Información general</Typography>
-              <Grid container spacing={1}>
-                {[
-                  { label: 'N° Documento', value: patient.documentNumber },
-                  { label: 'Fecha de nacimiento', value: patient.dateOfBirth },
-                  { label: 'Género', value: patient.gender },
-                  { label: 'Teléfono', value: patient.phone },
-                  { label: 'Email', value: patient.email },
-                  { label: 'Dirección', value: patient.address },
-                ].map((row) => (
-                  <Grid size={{ xs: 12, sm: 6 }} key={row.label}>
-                    <Typography variant="body2" color="text.secondary">{row.label}</Typography>
-                    <Typography variant="body1">{row.value}</Typography>
-                  </Grid>
-                ))}
-              </Grid>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2 }}>Adherencia (últimos 30 días)</Typography>
-              {adherenceQuery.isLoading ? (
-                <Skeleton variant="rounded" height={200} />
-              ) : adherenceData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={adherenceData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                    <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="percentage" stroke="#1565C0" strokeWidth={2} dot={{ r: 2 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  Sin datos de adherencia disponibles.
-                </Typography>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      <Card>
+      {/* Patient info */}
+      <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Typography variant="h6" sx={{ mb: 2 }}>Citas registradas</Typography>
-          {appointmentsQuery.isLoading ? (
+          <Typography variant="h6" sx={{ mb: 2 }}>Información del paciente</Typography>
+          <Grid container spacing={2}>
+            {patient && [
+              { label: 'Nombre completo', value: patient.fullName },
+              { label: 'DNI', value: patient.dni },
+              { label: 'Edad', value: String(patient.age) },
+              { label: 'Estado', value: patient.status },
+            ].map((row) => (
+              <Grid size={{ xs: 12, sm: 3 }} key={row.label}>
+                <Typography variant="body2" color="text.secondary">{row.label}</Typography>
+                <Typography variant="body1">{row.value}</Typography>
+              </Grid>
+            ))}
+            {!patient && (
+              <Grid size={{ xs: 12 }}>
+                <Alert severity="info">
+                  Datos del paciente no disponibles. ID: {patientId}.
+                </Alert>
+              </Grid>
+            )}
+          </Grid>
+        </CardContent>
+      </Card>
+
+      {/* Prescriptions styled as medical document */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6">Recetas médicas</Typography>
+          </Box>
+
+          {medicationsQuery.isLoading ? (
             <Skeleton variant="rounded" height={200} />
-          ) : appointments.length > 0 ? (
+          ) : medicationsQuery.isError ? (
+            <Alert severity="error">Error al cargar las recetas.</Alert>
+          ) : activeMedications.length === 0 ? (
+            <Alert severity="info">
+              No hay recetas activas para este paciente. Puede crear una nueva con el botón superior.
+            </Alert>
+          ) : (
+            <Box>
+              {activeMedications.map((med, index) => (
+                <Paper
+                  key={med.id}
+                  variant="outlined"
+                  sx={{
+                    p: 3,
+                    mb: index < activeMedications.length - 1 ? 2 : 0,
+                    border: '2px solid',
+                    borderColor: 'primary.light',
+                    bgcolor: 'grey.50',
+                  }}
+                >
+                  {/* Prescription header */}
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <LocalHospitalIcon color="primary" sx={{ fontSize: 32 }} />
+                      <Box>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 700 }} color="primary">
+                          MediTrack — Receta Médica
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Receta #{med.id}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Chip label="Activa" color="success" size="small" />
+                  </Box>
+
+                  <Divider sx={{ mb: 2 }} />
+
+                  {/* Patient & doctor info row */}
+                  <Grid container spacing={2} sx={{ mb: 2 }}>
+                    <Grid size={{ xs: 6 }}>
+                      <Typography variant="caption" color="text.secondary">Paciente</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {patient?.fullName ?? `Paciente #${patientId}`}
+                      </Typography>
+                    </Grid>
+                    <Grid size={{ xs: 3 }}>
+                      <Typography variant="caption" color="text.secondary">DNI</Typography>
+                      <Typography variant="body2">{patient?.dni ?? '—'}</Typography>
+                    </Grid>
+                    <Grid size={{ xs: 3 }}>
+                      <Typography variant="caption" color="text.secondary">Fecha inicio</Typography>
+                      <Typography variant="body2">
+                        {med.startDate?.split('T')[0] ?? '—'}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+
+                  {/* Medication details */}
+                  <Box sx={{ bgcolor: 'white', p: 2, borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
+                      Medicamento
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid size={{ xs: 12, sm: 4 }}>
+                        <Typography variant="caption" color="text.secondary">Nombre</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{med.name}</Typography>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 4 }}>
+                        <Typography variant="caption" color="text.secondary">Dosis</Typography>
+                        <Typography variant="body2">{med.dose}</Typography>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 4 }}>
+                        <Typography variant="caption" color="text.secondary">Frecuencia</Typography>
+                        <Typography variant="body2">Cada {med.frequencyHours} horas</Typography>
+                      </Grid>
+                      {med.endDate && (
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                          <Typography variant="caption" color="text.secondary">Fecha fin</Typography>
+                          <Typography variant="body2">{med.endDate.split('T')[0]}</Typography>
+                        </Grid>
+                      )}
+                      <Grid size={{ xs: 12, sm: 4 }}>
+                        <Typography variant="caption" color="text.secondary">Stock</Typography>
+                        <Typography variant="body2">
+                          {med.stockCount} unidades
+                          {med.stockCount <= 5 && (
+                            <Chip label="Bajo" color="warning" size="small" sx={{ ml: 1 }} />
+                          )}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+
+                    {/* Dose schedules */}
+                    {med.schedules.length > 0 && (
+                      <Box sx={{ mt: 2 }}>
+                        <Typography variant="caption" color="text.secondary">Horarios de toma</Typography>
+                        <Box sx={{ display: 'flex', gap: 1, mt: 0.5, flexWrap: 'wrap' }}>
+                          {med.schedules
+                            .filter((s) => s.isActive)
+                            .map((schedule) => (
+                              <Chip
+                                key={schedule.id}
+                                label={schedule.scheduledTime.substring(0, 5)}
+                                size="small"
+                                variant="outlined"
+                                color="primary"
+                              />
+                            ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
+                </Paper>
+              ))}
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Clinical records */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="h6" sx={{ mb: 2 }}>Historial clínico</Typography>
+          {recordsQuery.isLoading ? (
+            <Skeleton variant="rounded" height={200} />
+          ) : recordsQuery.isError ? (
+            <Alert severity="error">Error al cargar el historial clínico.</Alert>
+          ) : records.length === 0 ? (
+            <Alert severity="info">No hay registros clínicos para este paciente.</Alert>
+          ) : (
             <TableContainer component={Paper} variant="outlined">
-              <Table>
+              <Table size="small">
                 <TableHead>
                   <TableRow>
                     <TableCell sx={{ fontWeight: 600 }}>Fecha</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Tipo</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Motivo</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Estado</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Diagnóstico</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Notas</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Fuente</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {appointments.map((appt) => (
-                    <TableRow key={appt.id}>
-                      <TableCell>{appt.date}</TableCell>
-                      <TableCell>{appt.type}</TableCell>
-                      <TableCell>{appt.reason}</TableCell>
+                  {records.map((record) => (
+                    <TableRow key={record.id}>
+                      <TableCell>{record.recordDate?.split('T')[0]}</TableCell>
+                      <TableCell>{record.diagnosis}</TableCell>
                       <TableCell>
-                        <Chip
-                          label={appt.status}
-                          color={appt.status === 'Confirmada' ? 'success' : appt.status === 'Cancelada' ? 'error' : 'default'}
-                          size="small"
-                        />
+                        {record.notes ? (
+                          <Typography variant="body2" color="text.secondary">
+                            {record.notes.length > 80 ? `${record.notes.substring(0, 80)}...` : record.notes}
+                          </Typography>
+                        ) : '—'}
+                      </TableCell>
+                      <TableCell>
+                        <Chip label={record.source} size="small" color="info" />
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </TableContainer>
-          ) : (
-            <Typography variant="body2" color="text.secondary">
-              No se encontraron citas en los últimos 30 días.
-            </Typography>
           )}
         </CardContent>
       </Card>
