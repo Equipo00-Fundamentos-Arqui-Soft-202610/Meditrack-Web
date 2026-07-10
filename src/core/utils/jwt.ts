@@ -1,10 +1,8 @@
 export interface JwtPayload {
   sub: string;
   email: string;
-  nombre: string;
-  rol: string;
+  role: string;
   jti: string;
-  institucion?: string;
   exp: number;
   iss: string;
   aud: string;
@@ -34,7 +32,7 @@ export function getTokenUserId(token: string): number | null {
 }
 
 export function getTokenUserRole(token: string): string | null {
-  return decodeJwt(token)?.rol ?? null;
+  return decodeJwt(token)?.role ?? null;
 }
 
 export function isTokenExpired(token: string): boolean {

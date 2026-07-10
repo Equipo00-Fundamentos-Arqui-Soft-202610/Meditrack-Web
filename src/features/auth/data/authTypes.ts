@@ -1,4 +1,4 @@
-export type UserRole = 'paciente' | 'patient' | 'TechnicalStaff' | 'Doctor' | 'Admin';
+export type UserRole = 'Patient' | 'TechnicalStaff';
 
 export interface LoginRequest {
   email: string;
@@ -6,22 +6,23 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
-  nombre: string;
+  fullName: string;
   email: string;
   password: string;
-  rol: UserRole;
+  role: UserRole;
+  // NOTA: el Identity Service todavía no tiene dónde guardar la institución
+  // (IAM-RF2 pendiente) -- no se envía al backend, solo queda en el formulario.
   institucion?: string;
 }
 
+// Coincide con AuthenticatedUserResource del Identity Service (respuesta plana,
+// sin objeto anidado "usuario").
 export interface AuthResponse {
-  access_token: string;
-  usuario: UserProfile;
+  id: number;
+  email: string;
+  fullName: string;
+  role: UserRole;
+  token: string;
 }
 
-export interface UserProfile {
-  id: number;
-  nombre: string;
-  email: string;
-  rol: UserRole;
-  institucion?: string;
-}
+export type UserProfile = Omit<AuthResponse, 'token'>;

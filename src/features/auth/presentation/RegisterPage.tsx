@@ -7,11 +7,11 @@ import type { UserRole } from '../data/authTypes';
 export const RegisterPage = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
-  const [nombre, setNombre] = useState('');
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [rol, setRol] = useState<UserRole>('TechnicalStaff');
+  const [role, setRole] = useState<UserRole>('TechnicalStaff');
   const [institucion, setInstitucion] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -27,7 +27,10 @@ export const RegisterPage = () => {
 
     setLoading(true);
     try {
-      await register({ nombre, email, password, rol, institucion: rol === 'TechnicalStaff' ? institucion : undefined });
+      await register({
+        fullName, email, password, role,
+        institucion: role === 'TechnicalStaff' ? institucion : undefined,
+      });
       navigate('/dashboard');
     } catch {
       setError('Error al registrar. Intenta de nuevo.');
@@ -50,8 +53,8 @@ export const RegisterPage = () => {
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
           <Box component="form" onSubmit={handleSubmit}>
-            <TextField label="Nombre completo" fullWidth required value={nombre}
-              onChange={(e) => setNombre(e.target.value)} sx={{ mb: 2 }} />
+            <TextField label="Nombre completo" fullWidth required value={fullName}
+              onChange={(e) => setFullName(e.target.value)} sx={{ mb: 2 }} />
             <TextField label="Correo electrónico" type="email" fullWidth required value={email}
               onChange={(e) => setEmail(e.target.value)} sx={{ mb: 2 }} />
             <TextField label="Contraseña" type="password" fullWidth required value={password}
@@ -59,13 +62,13 @@ export const RegisterPage = () => {
             <TextField label="Confirmar contraseña" type="password" fullWidth required value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)} sx={{ mb: 2 }} />
 
-            <TextField select label="Rol" fullWidth required value={rol}
-              onChange={(e) => setRol(e.target.value as UserRole)} sx={{ mb: 2 }}>
+            <TextField select label="Rol" fullWidth required value={role}
+              onChange={(e) => setRole(e.target.value as UserRole)} sx={{ mb: 2 }}>
               <MenuItem value="TechnicalStaff">Personal Técnico</MenuItem>
-              <MenuItem value="paciente">Paciente</MenuItem>
+              <MenuItem value="Patient">Paciente</MenuItem>
             </TextField>
 
-            {rol === 'TechnicalStaff' && (
+            {role === 'TechnicalStaff' && (
               <TextField label="Institución / Centro de salud" fullWidth required value={institucion}
                 onChange={(e) => setInstitucion(e.target.value)} sx={{ mb: 2 }} />
             )}

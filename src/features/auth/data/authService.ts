@@ -9,7 +9,11 @@ export const authService = {
   },
 
   register: async (data: RegisterRequest): Promise<AuthResponse> => {
-    const response = await identityApi.post<AuthResponse>(ENDPOINTS.AUTH.REGISTER, data);
+    // El Identity Service no tiene dónde guardar "institucion" todavía (IAM-RF2
+    // pendiente) -- no se envía, solo se manda lo que el backend puede persistir.
+    const { fullName, email, password, role } = data;
+    const response = await identityApi.post<AuthResponse>(
+      ENDPOINTS.AUTH.REGISTER, { fullName, email, password, role });
     return response.data;
   },
 };

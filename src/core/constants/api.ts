@@ -9,8 +9,8 @@ export const API_BASE_URLS = {
 
 export const ENDPOINTS = {
   AUTH: {
-    LOGIN: '/auth/login',
-    REGISTER: '/auth/register',
+    LOGIN: '/authentication/sign-in',
+    REGISTER: '/authentication/sign-up',
   },
   PATIENTS: {
     SEARCH: '/patients/search',
@@ -64,7 +64,8 @@ export const ENDPOINTS = {
   ADHERENCE_HISTORY: '/medications/adherence-history',
   STOCK_LOW: '/stock/low',
   PROFILE: {
-    BASE: '/profile',
-    UPDATE: '/profile',
+    // El Identity Service no tiene un endpoint "yo" -- hay que pasar el id del
+    // usuario autenticado (se obtiene del propio JWT en el cliente).
+    BY_ID: (userId: number) => `/users/${userId}`,
   },
 } as const;

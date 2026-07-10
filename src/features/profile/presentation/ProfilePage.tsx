@@ -8,13 +8,12 @@ import { profileService } from '../data/profileService';
 
 export const ProfilePage = () => {
   const { user, logout } = useAuth();
-  const [nombre, setNombre] = useState(user?.nombre ?? '');
+  const [fullName, setFullName] = useState(user?.fullName ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
-  const [institucion, setInstitucion] = useState(user?.institucion ?? '');
   const [success, setSuccess] = useState('');
 
   const updateMutation = useMutation({
-    mutationFn: () => profileService.update({ nombre, email, institucion: institucion || undefined }),
+    mutationFn: () => profileService.update({ fullName, email }),
     onSuccess: () => setSuccess('Perfil actualizado correctamente.'),
     onError: () => setSuccess(''),
   });
@@ -41,8 +40,8 @@ export const ProfilePage = () => {
                 <Grid size={{ xs: 12 }}>
                   <TextField
                     label="Nombre completo"
-                    value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
                     fullWidth
                   />
                 </Grid>
@@ -57,16 +56,8 @@ export const ProfilePage = () => {
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <TextField
-                    label="Institución"
-                    value={institucion}
-                    onChange={(e) => setInstitucion(e.target.value)}
-                    fullWidth
-                  />
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <TextField
                     label="Rol"
-                    value={user.rol === 'TechnicalStaff' || user.rol === 'Doctor' ? 'Personal Técnico' : 'Paciente'}
+                    value={user.role === 'TechnicalStaff' ? 'Personal Técnico' : 'Paciente'}
                     fullWidth
                     slotProps={{ input: { readOnly: true } }}
                   />

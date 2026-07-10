@@ -30,18 +30,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = useCallback(async (data: LoginRequest) => {
     const response = await authService.login(data);
-    localStorage.setItem('access_token', response.access_token);
-    localStorage.setItem(AUTH_KEY, JSON.stringify(response.usuario));
-    setToken(response.access_token);
-    setUser(response.usuario);
+    const { token: accessToken, ...profile } = response;
+    localStorage.setItem('access_token', accessToken);
+    localStorage.setItem(AUTH_KEY, JSON.stringify(profile));
+    setToken(accessToken);
+    setUser(profile);
   }, []);
 
   const register = useCallback(async (data: RegisterRequest) => {
     const response = await authService.register(data);
-    localStorage.setItem('access_token', response.access_token);
-    localStorage.setItem(AUTH_KEY, JSON.stringify(response.usuario));
-    setToken(response.access_token);
-    setUser(response.usuario);
+    const { token: accessToken, ...profile } = response;
+    localStorage.setItem('access_token', accessToken);
+    localStorage.setItem(AUTH_KEY, JSON.stringify(profile));
+    setToken(accessToken);
+    setUser(profile);
   }, []);
 
   const logout = useCallback(() => {

@@ -71,7 +71,7 @@ export const DashboardLayout = () => {
             Portal Personal Técnico
           </Typography>
           <Avatar sx={{ bgcolor: 'primary.main', width: 34, height: 34 }}>
-            {user?.nombre?.charAt(0).toUpperCase() ?? 'U'}
+            {user?.fullName?.charAt(0).toUpperCase() ?? 'U'}
           </Avatar>
         </Toolbar>
       </AppBar>
