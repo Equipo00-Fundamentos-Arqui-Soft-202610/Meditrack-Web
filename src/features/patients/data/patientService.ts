@@ -8,6 +8,15 @@ import type {
   PatientAppointment,
 } from './patientTypes';
 
+export interface UpdateMedicationPayload {
+  dose: string;
+  frequencyHours: number;
+  startDate: string;
+  endDate?: string;
+  stockCount: number;
+  stockAlertThreshold: number;
+}
+
 export const patientService = {
   search: async (params: PatientSearchParams): Promise<PatientSearchResponse> => {
     try {
@@ -51,5 +60,15 @@ export const patientService = {
     } catch {
       return [];
     }
+  },
+
+  updateMedication: async (medicationId: number, payload: UpdateMedicationPayload) => {
+    const { data } = await treatmentApi.put(`${ENDPOINTS.MEDICATIONS.BASE}/${medicationId}`, payload);
+    return data;
+  },
+
+  cancelMedication: async (medicationId: number) => {
+    const { data } = await treatmentApi.patch(`${ENDPOINTS.MEDICATIONS.BASE}/${medicationId}/cancel`);
+    return data;
   },
 };

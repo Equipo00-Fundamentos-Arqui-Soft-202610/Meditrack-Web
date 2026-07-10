@@ -1,10 +1,12 @@
+const RENDER_GATEWAY = 'https://meditrack-gateway.onrender.com';
+
 export const API_BASE_URLS = {
-  IDENTITY_SERVICE: import.meta.env.VITE_IDENTITY_API ?? 'http://localhost:5000/identity/api/v1',
-  TREATMENT_SERVICE: import.meta.env.VITE_TREATMENT_API ?? 'http://localhost:5000/treatment/api/v1',
-  APPOINTMENT_SERVICE: import.meta.env.VITE_APPOINTMENT_API ?? 'http://localhost:5000/appointments/api/v1',
-  FOLLOW_UP_SERVICE: import.meta.env.VITE_FOLLOWUP_API ?? 'http://localhost:5000/followup/api/v1',
-  ANALYSIS_SERVICE: import.meta.env.VITE_ANALYSIS_API ?? 'http://localhost:5000/analysis/api/v1',
-  REMINDER_SERVICE: import.meta.env.VITE_REMINDER_API ?? 'http://localhost:5000/reminders',
+  IDENTITY_SERVICE: import.meta.env.VITE_IDENTITY_API ?? `${RENDER_GATEWAY}/identity/api/v1`,
+  TREATMENT_SERVICE: import.meta.env.VITE_TREATMENT_API ?? `${RENDER_GATEWAY}/treatment/api/v1`,
+  APPOINTMENT_SERVICE: import.meta.env.VITE_APPOINTMENT_API ?? `${RENDER_GATEWAY}/appointments/api/v1`,
+  FOLLOW_UP_SERVICE: import.meta.env.VITE_FOLLOWUP_API ?? `${RENDER_GATEWAY}/followup/api/v1`,
+  ANALYSIS_SERVICE: import.meta.env.VITE_ANALYSIS_API ?? `${RENDER_GATEWAY}/analysis/api/v1`,
+  REMINDER_SERVICE: import.meta.env.VITE_REMINDER_API ?? `${RENDER_GATEWAY}/reminders`,
 } as const;
 
 export const ENDPOINTS = {

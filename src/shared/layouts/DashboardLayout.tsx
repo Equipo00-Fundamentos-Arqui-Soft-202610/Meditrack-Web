@@ -5,8 +5,8 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import SearchIcon from '@mui/icons-material/Search';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import HistoryIcon from '@mui/icons-material/History';
-import NotificationsIcon from '@mui/icons-material/Notifications';
 import PersonIcon from '@mui/icons-material/Person';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
@@ -19,7 +19,7 @@ const NAV_ITEMS = [
   { label: 'Pacientes', icon: <SearchIcon />, path: '/patients' },
   { label: 'Citas', icon: <CalendarMonthIcon />, path: '/appointments' },
   { label: 'Historiales Clínicos', icon: <HistoryIcon />, path: '/clinical-records' },
-  { label: 'Alertas', icon: <NotificationsIcon />, path: '/alerts' },
+  { label: 'Alertas', icon: <WarningAmberIcon />, path: '/alerts' },
   { label: 'Perfil', icon: <PersonIcon />, path: '/profile' },
 ];
 

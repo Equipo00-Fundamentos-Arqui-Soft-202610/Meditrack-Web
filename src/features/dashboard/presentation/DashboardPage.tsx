@@ -9,7 +9,6 @@ import {
 } from 'recharts';
 import PeopleIcon from '@mui/icons-material/People';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import { dashboardService } from '../data/dashboardService';
 import { useAuth } from '../../../shared/contexts/AuthContext';
@@ -49,13 +48,8 @@ export const DashboardPage = () => {
     enabled: false,
   });
 
-  const alertsQuery = useQuery({
-    queryKey: ['pending-alerts'],
-    queryFn: () => dashboardService.getPendingAlertsCount(),
-  });
-
-  const loading = complianceQuery.isLoading || appointmentQuery.isLoading || alertsQuery.isLoading;
-  const hasError = complianceQuery.isError || appointmentQuery.isError || alertsQuery.isError;
+  const loading = complianceQuery.isLoading || appointmentQuery.isLoading;
+  const hasError = complianceQuery.isError || appointmentQuery.isError;
 
   const trendData = trendQuery.data ?? [];
   const avgAdherence = trendData.length > 0
@@ -92,13 +86,13 @@ export const DashboardPage = () => {
   return (
     <Box>
       <Typography variant="h4" sx={{ mb: 3 }}>Dashboard</Typography>
-      {renderSummaryCards(avgAdherence, alertsQuery.data, stockQuery.data)}
+      {renderSummaryCards(avgAdherence, stockQuery.data)}
       {renderCharts(trendQuery.data, complianceQuery.data, appointmentQuery.data, stockQuery.data)}
     </Box>
   );
 };
 
-const renderSummaryCards = (avgAdherence: number | null, alertsCount: number | undefined, stockData: unknown) => {
+const renderSummaryCards = (avgAdherence: number | null, stockData: unknown) => {
   const stockCount = Array.isArray(stockData) ? stockData.length : null;
 
   const cards = [
@@ -108,12 +102,6 @@ const renderSummaryCards = (avgAdherence: number | null, alertsCount: number | u
       value: avgAdherence !== null ? `${avgAdherence} %` : '— %',
       icon: <TrendingUpIcon />,
       color: '#26A69A',
-    },
-    {
-      label: 'Alertas pendientes',
-      value: alertsCount != null ? String(alertsCount) : '—',
-      icon: <WarningAmberIcon />,
-      color: '#FB8C00',
     },
     { label: 'Stock bajo', value: stockCount !== null ? String(stockCount) : '—', icon: <CalendarTodayIcon />, color: '#E53935' },
   ];
