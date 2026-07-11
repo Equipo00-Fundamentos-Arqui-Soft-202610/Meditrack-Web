@@ -15,11 +15,10 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import { clinicalRecordService } from '../../clinical-records/data/clinicalRecordService';
-import { followUpMedicationService } from '../../prescriptions/data/followUpMedicationService';
 import { patientService } from '../data/patientService';
 import type { PatientSearchResult } from '../data/patientTypes';
 import type { ClinicalRecord } from '../../clinical-records/data/clinicalRecordTypes';
-import type { FollowUpMedication } from '../../prescriptions/data/followUpMedicationService';
+import type { TreatmentMedication } from '../data/patientTypes';
 
 export const PatientDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -36,8 +35,8 @@ export const PatientDetailPage = () => {
   });
 
   const medicationsQuery = useQuery({
-    queryKey: ['followup-medications', patientId],
-    queryFn: () => followUpMedicationService.getByPatientId(patientId),
+    queryKey: ['treatment-medications', patientId],
+    queryFn: () => patientService.getMedicationsByPatient(patientId),
     enabled: !isNaN(patientId),
   });
 
@@ -52,7 +51,7 @@ export const PatientDetailPage = () => {
   }
 
   const records: ClinicalRecord[] = recordsQuery.data ?? [];
-  const medications: FollowUpMedication[] = medicationsQuery.data ?? [];
+  const medications: TreatmentMedication[] = medicationsQuery.data ?? [];
   const activeMedications = medications.filter((m) => m.isActive);
 
   return (
@@ -207,7 +206,7 @@ export const PatientDetailPage = () => {
                     <Grid container spacing={2}>
                       <Grid size={{ xs: 12, sm: 4 }}>
                         <Typography variant="caption" color="text.secondary">Nombre</Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{med.name}</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{med.officialName}</Typography>
                       </Grid>
                       <Grid size={{ xs: 12, sm: 4 }}>
                         <Typography variant="caption" color="text.secondary">Dosis</Typography>
@@ -235,21 +234,19 @@ export const PatientDetailPage = () => {
                     </Grid>
 
                     {/* Dose schedules */}
-                    {med.schedules.length > 0 && (
+                    {med.scheduledTimes.length > 0 && (
                       <Box sx={{ mt: 2 }}>
                         <Typography variant="caption" color="text.secondary">Horarios de toma</Typography>
                         <Box sx={{ display: 'flex', gap: 1, mt: 0.5, flexWrap: 'wrap' }}>
-                          {med.schedules
-                            .filter((s) => s.isActive)
-                            .map((schedule) => (
-                              <Chip
-                                key={schedule.id}
-                                label={schedule.scheduledTime.substring(0, 5)}
-                                size="small"
-                                variant="outlined"
-                                color="primary"
-                              />
-                            ))}
+                          {med.scheduledTimes.map((time, i) => (
+                            <Chip
+                              key={i}
+                              label={time.substring(0, 5)}
+                              size="small"
+                              variant="outlined"
+                              color="primary"
+                            />
+                          ))}
                         </Box>
                       </Box>
                     )}
