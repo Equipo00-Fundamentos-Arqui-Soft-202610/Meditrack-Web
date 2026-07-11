@@ -1,11 +1,37 @@
 import { Navigate, Outlet } from 'react-router-dom';
+import { getTokenUserRole, isTokenExpired } from '../../core/utils/jwt';
 
 export const AuthGuard = () => {
   const token = localStorage.getItem('access_token');
-  return token ? <Outlet /> : <Navigate to="/login" replace />;
+
+  if (!token) return <Navigate to="/login" replace />;
+
+  if (isTokenExpired(token)) {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('auth_user');
+    return <Navigate to="/login" replace />;
+  }
+
+  const role = getTokenUserRole(token);
+  if (role !== 'TechnicalStaff') {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('auth_user');
+    const reason = encodeURIComponent('Este portal es exclusivo para personal técnico. Los pacientes deben usar la aplicación móvil.');
+    return <Navigate to={`/login?reason=${reason}`} replace />;
+  }
+
+  return <Outlet />;
 };
 
 export const PublicGuard = () => {
   const token = localStorage.getItem('access_token');
-  return token ? <Navigate to="/dashboard" replace /> : <Outlet />;
+  if (!token) return <Outlet />;
+
+  if (isTokenExpired(token)) {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('auth_user');
+    return <Outlet />;
+  }
+
+  return <Navigate to="/dashboard" replace />;
 };

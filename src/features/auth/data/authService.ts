@@ -4,7 +4,9 @@ import { ENDPOINTS } from '../../../core/constants/api';
 
 export const authService = {
   login: async (data: LoginRequest): Promise<AuthResponse> => {
-    const response = await identityApi.post<AuthResponse>(ENDPOINTS.AUTH.LOGIN, data);
+    const response = await identityApi.post<AuthResponse>(ENDPOINTS.AUTH.LOGIN, data, {
+      headers: { 'X-Client-Type': 'web' },
+    });
     return response.data;
   },
 
