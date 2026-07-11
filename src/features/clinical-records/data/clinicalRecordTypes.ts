@@ -11,9 +11,8 @@ export interface ClinicalRecord {
 
 export interface ClinicalRecordImportPayload {
   patientId: number;
-  recordType: string;
-  description: string;
   recordDate: string;
+  diagnosis: string;
   notes: string;
-  files?: File[];
+  file: File;
 }

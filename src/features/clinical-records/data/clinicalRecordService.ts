@@ -36,9 +36,13 @@ export const clinicalRecordService = {
 
   import: async (payload: ClinicalRecordImportPayload): Promise<void> => {
     const formData = new FormData();
-    if (payload.files && payload.files.length > 0) {
-      formData.append('file', payload.files[0]);
-    }
-    await analysisApi.post(ENDPOINTS.CLINICAL_RECORDS.IMPORT, formData);
+    formData.append('patientId', payload.patientId.toString());
+    formData.append('recordDate', payload.recordDate);
+    formData.append('diagnosis', payload.diagnosis);
+    if (payload.notes) formData.append('notes', payload.notes);
+    formData.append('file', payload.file);
+    await analysisApi.post(ENDPOINTS.CLINICAL_RECORDS.IMPORT, formData, {
+      headers: { 'Content-Type': undefined },
+    });
   },
 };

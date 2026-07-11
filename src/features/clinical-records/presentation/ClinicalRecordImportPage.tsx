@@ -15,11 +15,10 @@ export const ClinicalRecordImportPage = () => {
   const navigate = useNavigate();
   const [patient, setPatient] = useState<PatientSearchResult | null>(null);
   const [patientSearch, setPatientSearch] = useState('');
-  const [recordType, setRecordType] = useState('');
-  const [description, setDescription] = useState('');
   const [recordDate, setRecordDate] = useState(new Date().toISOString().split('T')[0]);
+  const [diagnosis, setDiagnosis] = useState('');
   const [notes, setNotes] = useState('');
-  const [files, setFiles] = useState<File[]>([]);
+  const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
 
   const patientQuery = useQuery({
@@ -32,11 +31,10 @@ export const ClinicalRecordImportPage = () => {
     mutationFn: () =>
       clinicalRecordService.import({
         patientId: patient!.patientId,
-        recordType,
-        description,
         recordDate,
+        diagnosis,
         notes,
-        files: files.length > 0 ? files : undefined,
+        file: file!,
       }),
     onSuccess: () => navigate('/clinical-records'),
     onError: () => setError('Error al importar el registro clínico. Verifica los datos e intenta nuevamente.'),
@@ -45,15 +43,15 @@ export const ClinicalRecordImportPage = () => {
   const patientOptions: PatientSearchResult[] = patientQuery.data?.patients ?? [];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFiles(Array.from(e.target.files));
+    if (e.target.files && e.target.files.length > 0) {
+      setFile(e.target.files[0]);
     }
   };
 
   const handleSubmit = () => {
     if (!patient) { setError('Debes seleccionar un paciente.'); return; }
-    if (!recordType) { setError('Debes seleccionar un tipo de registro.'); return; }
-    if (!description.trim()) { setError('Debes ingresar una descripción.'); return; }
+    if (!diagnosis.trim()) { setError('Debes ingresar un diagnóstico.'); return; }
+    if (!file) { setError('Debes adjuntar un archivo.'); return; }
     setError('');
     importMutation.mutate();
   };
@@ -87,24 +85,6 @@ export const ClinicalRecordImportPage = () => {
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <TextField
-                select
-                label="Tipo de registro"
-                value={recordType}
-                onChange={(e) => setRecordType(e.target.value)}
-                fullWidth
-                required
-                slotProps={{ select: { native: true } }}
-              >
-                <option value="">Seleccionar...</option>
-                <option value="Análisis">Análisis</option>
-                <option value="Diagnóstico">Diagnóstico</option>
-                <option value="Receta">Receta</option>
-                <option value="Informe">Informe</option>
-                <option value="Otro">Otro</option>
-              </TextField>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <TextField
                 label="Fecha del registro"
                 type="date"
                 value={recordDate}
@@ -115,9 +95,9 @@ export const ClinicalRecordImportPage = () => {
             </Grid>
             <Grid size={{ xs: 12 }}>
               <TextField
-                label="Descripción"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                label="Diagnóstico"
+                value={diagnosis}
+                onChange={(e) => setDiagnosis(e.target.value)}
                 fullWidth
                 required
                 multiline
@@ -140,8 +120,13 @@ export const ClinicalRecordImportPage = () => {
                 component="label"
                 startIcon={<CloudUploadIcon />}
               >
-                {files.length > 0 ? `${files.length} archivo(s) seleccionado(s)` : 'Adjuntar archivos'}
-                <input type="file" hidden multiple onChange={handleFileChange} />
+                {file ? file.name : 'Adjuntar archivo'}
+                <input
+                  type="file"
+                  hidden
+                  accept=".csv,.pdf,.png,.jpg,.jpeg"
+                  onChange={handleFileChange}
+                />
               </Button>
             </Grid>
           </Grid>
