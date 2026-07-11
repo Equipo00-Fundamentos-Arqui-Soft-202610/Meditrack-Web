@@ -10,7 +10,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
 import { patientService } from '../data/patientService';
-import type { FollowUpMedication } from '../../prescriptions/data/followUpMedicationService';
+import type { TreatmentMedication } from '../data/patientTypes';
 
 export const MedicationEditPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,14 +19,14 @@ export const MedicationEditPage = () => {
   const queryClient = useQueryClient();
   const medicationId = Number(id);
 
-  const med = (location.state as FollowUpMedication | null);
+  const med = (location.state as TreatmentMedication | null);
 
   const [dose, setDose] = useState(med?.dose ?? '');
   const [frequencyHours, setFrequencyHours] = useState(med?.frequencyHours ?? 8);
   const [startDate, setStartDate] = useState(med?.startDate?.split('T')[0] ?? '');
   const [endDate, setEndDate] = useState(med?.endDate?.split('T')[0] ?? '');
   const [stockCount, setStockCount] = useState(med?.stockCount ?? 0);
-  const [stockAlertThreshold, setStockAlertThreshold] = useState(5);
+  const [stockAlertThreshold, setStockAlertThreshold] = useState(med?.stockAlertThreshold ?? 5);
   const [error, setError] = useState('');
 
   const updateMutation = useMutation({
@@ -40,7 +40,7 @@ export const MedicationEditPage = () => {
         stockAlertThreshold,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['followup-medications'] });
+      queryClient.invalidateQueries({ queryKey: ['treatment-medications'] });
       navigate(-1);
     },
     onError: () => setError('Error al actualizar el medicamento.'),
@@ -49,7 +49,7 @@ export const MedicationEditPage = () => {
   const cancelMutation = useMutation({
     mutationFn: () => patientService.cancelMedication(medicationId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['followup-medications'] });
+      queryClient.invalidateQueries({ queryKey: ['treatment-medications'] });
       navigate(-1);
     },
     onError: () => setError('Error al cancelar el medicamento.'),
@@ -88,7 +88,7 @@ export const MedicationEditPage = () => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 label="Nombre"
-                value={med.name}
+                value={med.officialName}
                 fullWidth
                 disabled
               />
@@ -157,22 +157,20 @@ export const MedicationEditPage = () => {
       </Card>
 
       {/* Dose schedules (read-only display) */}
-      {med.schedules.length > 0 && (
+      {med.scheduledTimes.length > 0 && (
         <Card sx={{ mb: 3 }}>
           <CardContent>
             <Typography variant="h6" sx={{ mb: 2 }}>Horarios de toma</Typography>
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              {med.schedules
-                .filter((s) => s.isActive)
-                .map((schedule) => (
-                  <Chip
-                    key={schedule.id}
-                    label={schedule.scheduledTime.substring(0, 5)}
-                    size="small"
-                    variant="outlined"
-                    color="primary"
-                  />
-                ))}
+              {med.scheduledTimes.map((time, i) => (
+                <Chip
+                  key={i}
+                  label={time.substring(0, 5)}
+                  size="small"
+                  variant="outlined"
+                  color="primary"
+                />
+              ))}
             </Box>
           </CardContent>
         </Card>

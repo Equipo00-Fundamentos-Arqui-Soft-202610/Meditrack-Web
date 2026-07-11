@@ -45,3 +45,19 @@ export interface PatientAppointment {
   status: string;
   reason: string;
 }
+
+export interface TreatmentMedication {
+  id: number;
+  prescriptionId: number;
+  catalogId: number;
+  officialName: string;
+  category: string;
+  dose: string;
+  frequencyHours: number;
+  startDate: string;
+  endDate: string | null;
+  stockCount: number;
+  stockAlertThreshold: number;
+  isActive: boolean;
+  scheduledTimes: string[];
+}
