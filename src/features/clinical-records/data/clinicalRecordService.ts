@@ -39,8 +39,6 @@ export const clinicalRecordService = {
     if (payload.files && payload.files.length > 0) {
       formData.append('file', payload.files[0]);
     }
-    await analysisApi.post(ENDPOINTS.CLINICAL_RECORDS.IMPORT, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    await analysisApi.post(ENDPOINTS.CLINICAL_RECORDS.IMPORT, formData);
   },
 };
