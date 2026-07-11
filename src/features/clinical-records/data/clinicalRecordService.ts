@@ -4,13 +4,29 @@ import type { ClinicalRecord, ClinicalRecordImportPayload } from './clinicalReco
 
 export const clinicalRecordService = {
   getAll: async (params?: { patientId?: number }): Promise<ClinicalRecord[]> => {
-    const { data } = await analysisApi.get(ENDPOINTS.CLINICAL_RECORDS.BASE, { params });
-    return Array.isArray(data) ? data : [];
+    try {
+      const { data } = await analysisApi.get(ENDPOINTS.CLINICAL_RECORDS.BASE, { params });
+      return Array.isArray(data) ? data : [];
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'response' in err) {
+        const status = (err as { response?: { status?: number } }).response?.status;
+        if (status === 404) return [];
+      }
+      throw err;
+    }
   },
 
   getByPatient: async (patientId: number): Promise<ClinicalRecord[]> => {
-    const { data } = await analysisApi.get(ENDPOINTS.CLINICAL_RECORDS.BY_PATIENT(patientId));
-    return data;
+    try {
+      const { data } = await analysisApi.get(ENDPOINTS.CLINICAL_RECORDS.BY_PATIENT(patientId));
+      return Array.isArray(data) ? data : [];
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'response' in err) {
+        const status = (err as { response?: { status?: number } }).response?.status;
+        if (status === 404) return [];
+      }
+      throw err;
+    }
   },
 
   getById: async (id: number): Promise<ClinicalRecord> => {
