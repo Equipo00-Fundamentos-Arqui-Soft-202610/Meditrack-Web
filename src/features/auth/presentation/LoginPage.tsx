@@ -1,21 +1,15 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams, Link as RouterLink } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { Box, Card, CardContent, TextField, Button, Typography, Alert, Link } from '@mui/material';
 import { useAuth } from '../../../shared/contexts/AuthContext';
 
 export const LoginPage = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const reason = searchParams.get('reason');
-    if (reason) setError(reason);
-  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,18 +18,8 @@ export const LoginPage = () => {
     try {
       await login({ email, password });
       navigate('/dashboard');
-    } catch (err: unknown) {
-      const status = err && typeof err === 'object' && 'response' in err
-        ? (err as { response?: { status?: number } }).response?.status
-        : undefined;
-      const serverMessage = err && typeof err === 'object' && 'response' in err
-        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
-        : undefined;
-      if (status === 403 || (serverMessage && serverMessage.includes('exclusivo'))) {
-        setError(serverMessage ?? 'Este portal es exclusivo para personal técnico. Los pacientes deben usar la aplicación móvil.');
-      } else {
-        setError('Credenciales inválidas. Verifica tu correo y contraseña.');
-      }
+    } catch {
+      setError('Credenciales inválidas. Verifica tu correo y contraseña.');
     } finally {
       setLoading(false);
     }

@@ -16,8 +16,7 @@ export const AuthGuard = () => {
   if (role !== 'TechnicalStaff') {
     localStorage.removeItem('access_token');
     localStorage.removeItem('auth_user');
-    const reason = encodeURIComponent('Este portal es exclusivo para personal técnico. Los pacientes deben usar la aplicación móvil.');
-    return <Navigate to={`/login?reason=${reason}`} replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return <Outlet />;
