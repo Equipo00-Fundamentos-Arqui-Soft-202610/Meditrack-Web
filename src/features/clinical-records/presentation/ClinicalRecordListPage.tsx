@@ -7,6 +7,7 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import AddIcon from '@mui/icons-material/Add';
 import HistoryIcon from '@mui/icons-material/History';
 import { patientService } from '../../patients/data/patientService';
 import type { PatientSearchResult } from '../../patients/data/patientTypes';
@@ -33,13 +34,22 @@ export const ClinicalRecordListPage = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Historial clinico</Typography>
-        <Button
-          variant="outlined"
-          startIcon={<HistoryIcon />}
-          onClick={() => navigate('/clinical-records/import')}
-        >
-          Importar registro
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => navigate('/clinical-records/new')}
+          >
+            Crear registro
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<HistoryIcon />}
+            onClick={() => navigate('/clinical-records/import')}
+          >
+            Importar CSV
+          </Button>
+        </Box>
       </Box>
 
       <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
