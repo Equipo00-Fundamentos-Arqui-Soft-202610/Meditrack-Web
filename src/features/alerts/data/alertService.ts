@@ -7,8 +7,12 @@ export const alertService = {
     try {
       const { data } = await analysisApi.get(ENDPOINTS.ALERTS.BASE, { params });
       return Array.isArray(data) ? data : [];
-    } catch {
-      return [];
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'response' in err) {
+        const status = (err as { response?: { status?: number } }).response?.status;
+        if (status === 404) return [];
+      }
+      throw err;
     }
   },
 
