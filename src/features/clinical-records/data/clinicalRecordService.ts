@@ -1,6 +1,6 @@
 import { analysisApi } from '../../../core/api/apiClient';
 import { ENDPOINTS } from '../../../core/constants/api';
-import type { ClinicalRecord, ClinicalRecordImportPayload } from './clinicalRecordTypes';
+import type { ClinicalRecord, ClinicalRecordCreatePayload, ClinicalRecordImportPayload } from './clinicalRecordTypes';
 
 export const clinicalRecordService = {
   getAll: async (params?: { patientId?: number }): Promise<ClinicalRecord[]> => {
@@ -31,6 +31,17 @@ export const clinicalRecordService = {
 
   getById: async (id: number): Promise<ClinicalRecord> => {
     const { data } = await analysisApi.get(`${ENDPOINTS.CLINICAL_RECORDS.BASE}/${id}`);
+    return data;
+  },
+
+  create: async (payload: ClinicalRecordCreatePayload): Promise<ClinicalRecord> => {
+    const body = {
+      patientId: payload.patientId,
+      recordDate: payload.recordDate,
+      diagnosis: payload.diagnosis,
+      notes: payload.notes || null,
+    };
+    const { data } = await analysisApi.post(ENDPOINTS.CLINICAL_RECORDS.BASE, body);
     return data;
   },
 

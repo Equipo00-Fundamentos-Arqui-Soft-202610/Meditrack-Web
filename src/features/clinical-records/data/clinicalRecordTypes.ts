@@ -9,6 +9,13 @@ export interface ClinicalRecord {
   createdAt: string;
 }
 
+export interface ClinicalRecordCreatePayload {
+  patientId: number;
+  recordDate: string;
+  diagnosis: string;
+  notes?: string;
+}
+
 export interface ClinicalRecordImportPayload {
   patientId: number;
   recordDate: string;
