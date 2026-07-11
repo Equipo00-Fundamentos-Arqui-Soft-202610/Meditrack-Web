@@ -38,6 +38,17 @@ export const patientService = {
     }
   },
 
+  fetchAll: async (): Promise<PatientSearchResult[]> => {
+    try {
+      const { data } = await treatmentApi.get(ENDPOINTS.PATIENTS.SEARCH, {
+        params: { query: ' ' },
+      });
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
+  },
+
   getAdherenceHistory: async (
     patientId: number,
   ): Promise<AdherenceHistoryPoint[]> => {
