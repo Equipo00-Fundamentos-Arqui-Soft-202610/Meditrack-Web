@@ -23,30 +23,11 @@ export const patientService = {
     const term = params.searchTerm?.trim() ?? '';
     if (!term) return { patients: [], totalCount: 0, page: 1, pageSize: 50 };
 
-    const parts = term.split(' - ').filter(p => p.trim().length > 0);
-    const queries = parts.length > 1 ? parts : [term];
-
     try {
-      const results = await Promise.all(
-        queries.map(q =>
-          treatmentApi
-            .get(ENDPOINTS.PATIENTS.SEARCH, { params: { query: q } })
-            .then(res => ((Array.isArray(res.data) ? res.data : []) as PatientSearchResult[]))
-            .catch(() => [] as PatientSearchResult[]),
-        ),
-      );
-
-      const seen = new Set<number>();
-      const patients: PatientSearchResult[] = [];
-      for (const result of results) {
-        for (const p of result) {
-          if (!seen.has(p.patientId)) {
-            seen.add(p.patientId);
-            patients.push(p);
-          }
-        }
-      }
-
+      const { data } = await treatmentApi.get(ENDPOINTS.PATIENTS.SEARCH, {
+        params: { query: term },
+      });
+      const patients: PatientSearchResult[] = Array.isArray(data) ? data : [];
       return { patients, totalCount: patients.length, page: 1, pageSize: 50 };
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'response' in err) {
